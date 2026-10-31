@@ -15,15 +15,15 @@ screenshots of an existing Pomodoro-style app we use for inspiration, and
 
 ## 1. Release legend
 
-| Tag      | Meaning                                                       |
-| -------- | ------------------------------------------------------------- |
-| **MVP**  | Required for the first usable build. Nothing else ships in it. |
-| **v0.2** | First follow-up: make the timer comfortable for daily use.     |
-| **v0.3** | Sound customization.                                           |
-| **v0.4** | Tasks.                                                         |
-| **v0.5** | Reports / history.                                             |
-| **Later**| Ideas we keep in view but haven't scheduled.                   |
-| **Never**| Explicit non-goals.                                            |
+| Tag      | Scope                                                                      |
+| -------- | -------------------------------------------------------------------------- |
+| **MVP**  | Fixed 30 / 5 focus–rest cycle, each phase started manually with Play; menu-bar countdown; popover with Play/Pause, Skip, Reset, Quit; end-of-phase icon change + notification + fixed system sound; reset on sleep. Nothing else ships in it. |
+| **v0.2** | Settings window: custom durations, long breaks, daily target, auto-start option, sleep behaviour option, notification toggle; launch at login; global shortcuts; persisted timer; progress ring and tinted icon. |
+| **v0.3** | Sound customization: choose sounds, volume, ticking sound.                  |
+| **v0.4** | Tasks.                                                                      |
+| **v0.5** | Reports / history.                                                          |
+| **Later**| Ideas we keep in view but haven't scheduled (blocking, automation, sync).  |
+| **Never**| Explicit non-goals (ads, upsells).                                          |
 
 ---
 
