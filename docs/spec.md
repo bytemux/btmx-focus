@@ -18,7 +18,7 @@ screenshots of an existing Pomodoro-style app we use for inspiration, and
 | Tag      | Scope                                                                      |
 | -------- | -------------------------------------------------------------------------- |
 | **MVP**  | Fixed 30 / 5 focus–rest cycle, each phase started manually with Play; menu-bar countdown; popover with Play/Pause, Skip, Reset, Quit; end-of-phase icon change + notification + fixed system sound; reset on sleep. Nothing else ships in it. |
-| **v0.2** | Settings window: custom durations, long breaks, daily target, auto-start option, sleep behaviour option, notification toggle; launch at login; global shortcuts; persisted timer; progress ring and tinted icon. |
+| **v0.2** | Settings window: custom durations, long breaks, daily target, auto-start option, sleep behaviour option, notification toggle; launch at login; global shortcuts; persisted timer; progress ring. |
 | **v0.3** | Sound customization: choose sounds, volume, ticking sound.                  |
 | **v0.4** | Tasks.                                                                      |
 | **v0.5** | Reports / history.                                                          |
@@ -85,9 +85,9 @@ tasks, reports, persistence across app restarts.
 
 | State   | Holds                          | Menu-bar label                  | Popover button |
 | ------- | ------------------------------ | ------------------------------- | -------------- |
-| Ready   | phase                          | phase icon + full duration      | ▶ Play         |
-| Running | phase, `endDate`               | phase icon + live `mm:ss`       | ❚❚ Pause       |
-| Paused  | phase, `remaining` (Duration)  | paused icon + frozen `mm:ss`    | ▶ Play         |
+| Ready   | phase                          | phase icon only (no time)       | ▶ Play         |
+| Running | phase, `endDate`               | live `mm:ss` + coloured phase icon | ❚❚ Pause    |
+| Paused  | phase, `remaining` (Duration)  | frozen `mm:ss` + paused icon    | ▶ Play         |
 
 Actions:
 
@@ -129,21 +129,27 @@ The timer is **deadline-based**, not tick-counting:
 
 #### Menu-bar item
 
-- Label = SF Symbol + space + `mm:ss`, using **monospaced digits** so the
-  status item doesn't change width every second.
+- Label = `mm:ss` + space + SF Symbol once a phase has been started
+  (Running or Paused), using **monospaced digits** so the status item
+  doesn't change width every second. In Ready (not started) it shows the
+  icon only.
+- The icon sits **to the right of the time** and stays anchored there:
+  status items grow to the left, so starting or stopping the timer adds or
+  removes the time without moving the icon.
 - Phase icons (SF Symbols, final pick during implementation):
   - Ready / Running Focus: `timer`
   - Ready / Running Rest: `cup.and.saucer`
   - Paused: `pause.circle`
-- Ready and Running are visually distinguishable (e.g. outline vs. filled /
-  tinted symbol), so a glance tells whether the clock is actually moving.
-- Icons are template images so they adapt to light / dark menu bars and
-  wallpaper tinting.
+- Ready and Running are visually distinguishable, so a glance tells whether
+  the clock is actually moving: running icons are filled and coloured —
+  **red** during Focus, **green** during Rest. Ready and Paused icons are
+  outline template images in the menu bar's normal white / gray, adapting
+  to light / dark menu bars.
 - Durations ≥ 60 min (not possible in MVP) would render as `h:mm:ss`.
 
 #### Popover
 
-Clicking the item opens a popover (SwiftUI `MenuBarExtra`, window style),
+Clicking the item opens an `NSPopover` hosting a SwiftUI view,
 modelled on `sources/main.png` but without task field, ring, footer or ads:
 
 ```
@@ -193,6 +199,22 @@ Rules:
 - On launch: Ready(Focus). Timer state is **not** persisted across
   quit/relaunch in the MVP.
 
+### 3.8 Diagnostics — **MVP**
+
+- Every user and system action (play, pause, skip, reset, popover
+  open/close, phase end, system sleep, clock change, notification
+  permission result, launch, quit) is appended as a timestamped breadcrumb
+  with the state before → after to `breadcrumbs.log`, written unbuffered so
+  it survives a crash. Also mirrored to the unified log
+  (subsystem `com.btmx.focus`).
+- Fatal signals (including Swift runtime traps) append a `FATAL` line, then
+  the app crashes normally so macOS still writes its `.ips` report.
+- If the previous session didn't exit cleanly, the next launch saves
+  `crash-<date>.log` with the crash reason, the **last user action** and the
+  last 100 breadcrumbs.
+- Logs stay on the Mac (sandbox container `Library/Logs/btmx-focus/`);
+  `⋯` → "Show Logs in Finder" opens the folder.
+
 ---
 
 ## 4. Non-functional requirements
@@ -218,24 +240,22 @@ ADR before or during implementation.
 | Concern          | Choice                                                                 | ADR |
 | ---------------- | ---------------------------------------------------------------------- | --- |
 | Language         | Swift 6, strict concurrency on                                         | 0001 |
-| UI framework     | SwiftUI; `MenuBarExtra` with `.window` style for the popover           | 0002 |
-| Min. macOS       | macOS 15 (`@Observable`, modern `MenuBarExtra`, SwiftData, `SMAppService`) | 0003 |
+| UI framework     | AppKit `NSStatusItem` + `NSPopover` hosting SwiftUI views (`MenuBarExtra` can't render a monospaced-digit label) | [0002](adr/0002-status-item-with-appkit.md) |
+| Min. macOS       | macOS 15 (`@Observable`, `onKeyPress`, SwiftData, `SMAppService`)      | 0003 |
 | State            | Pure, testable `TimerEngine` (value-type state + actions, clock injected) wrapped by an `@Observable @MainActor` model the UI binds to | 0004 |
-| Time source      | Wall clock (`Date`) for deadlines; display ticks via a 1 Hz timer aligned to second boundaries, with tolerance; reset on `NSWorkspace.willSleepNotification` | 0005 |
+| Time source      | Wall clock (`Date`) for deadlines; a single `Task.sleep` to the next instant the displayed second changes (50 ms tolerance), none while not running; reset on `NSWorkspace.willSleepNotification` | 0005 |
 | Signals          | `UNUserNotificationCenter` (silent) + `NSSound` with built-in system sounds | 0007 |
 | Persistence      | None in MVP. `UserDefaults` for settings (v0.2); SwiftData for tasks & history (v0.4+) | later |
-| Project layout   | Xcode app target + local Swift package `BtmxFocusCore` holding the engine, so core logic tests run with `swift test` without launching the app | 0006 |
+| Project layout   | One SwiftPM package: `BtmxFocusCore` library (engine), `BtmxFocus` executable (app), tests; `scripts/build-app.sh` wraps the binary into a signed `.app`. No `.xcodeproj` | [0006](adr/0006-swiftpm-package-instead-of-xcode-project.md) |
 | Identity         | Product name `btmx-focus`; bundle id proposal `com.btmx.focus`          | — |
 | Tests            | Swift Testing (`@Test`) for engine logic with a fake clock; covers state transitions, phase end, sleep reset, rounding | — |
 | Lint / format    | SwiftLint + SwiftFormat (installed via Homebrew), run in a pre-commit hook / CI | — |
-| Build output     | `xcodebuild … \| xcbeautify`                                           | — |
+| Build            | `swift build` / `swift test`; see [building.md](building.md)           | — |
 | Icons            | SF Symbols (SF Symbols app installed for browsing)                     | — |
 | Distribution     | MVP: local build, ad-hoc signed. Later: Developer ID + notarization, possibly Mac App Store | later |
 
-Environment note: full Xcode must be installed and selected
-(`sudo xcode-select -s /Applications/Xcode.app`); currently only the Command
-Line Tools are active, which is enough for `swift test` on the core package
-but not for building the app.
+Build and launch instructions: [`docs/building.md`](building.md). The
+package builds with either the Command Line Tools or Xcode.
 
 ### 5.1 Core module sketch — **MVP**
 
@@ -299,7 +319,8 @@ grouped by release. Anything not marked MVP is explicitly **not** in the MVP.
 | Phase icon + `mm:ss` in menu bar                           | **MVP** |
 | Popover: phase, large time, Play/Pause under it, Skip, Reset, Quit | **MVP** |
 | Option to hide the time and show icon only                 | v0.2 |
-| Tinted / progress-ring icon while running (`sources/tray_icon_duiring_session.png`) | v0.2 |
+| Coloured icon while running: red Focus, green Rest (`sources/tray_icon_duiring_session.png`) | **MVP** |
+| Progress-ring icon while running                           | v0.2 |
 | Circular progress ring with drag handle in popover (`sources/main.png`) | v0.2 |
 | Appearance override (Auto / Light / Dark)                  | Later |
 
@@ -363,8 +384,8 @@ Based on `sources/reports*.png`:
 
 ## 7. MVP acceptance criteria
 
-1. Launching the app shows a menu-bar item with the Focus icon and `30:00`,
-   and no Dock icon.
+1. Launching the app shows a menu-bar item with the Focus icon only (no
+   time), and no Dock icon.
 2. Clicking the item opens a popover showing "Focus", `30:00` and a Play
    button under the time.
 3. Play → menu bar and popover count down every second; digits don't shift

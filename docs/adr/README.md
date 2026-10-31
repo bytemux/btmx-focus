@@ -21,16 +21,16 @@ What we chose.
 What becomes easier or harder as a result.
 ```
 
-## Planned
+## Index
 
 Taken from [spec §5](../spec.md#5-technical-approach):
 
 | #    | Topic                                                  | Status  |
 | ---- | ------------------------------------------------------ | ------- |
 | 0001 | Swift 6 with strict concurrency                         | Planned |
-| 0002 | SwiftUI `MenuBarExtra` (window style) for the popover   | Planned |
+| [0002](0002-status-item-with-appkit.md) | Status item with AppKit, popover content in SwiftUI | Accepted |
 | 0003 | Minimum macOS version: 15                               | Planned |
 | 0004 | Pure `TimerEngine` + `@Observable` model                | Planned |
 | 0005 | Deadline-based timing; reset on system sleep            | Planned |
-| 0006 | Xcode app + local `BtmxFocusCore` Swift package         | Planned |
+| [0006](0006-swiftpm-package-instead-of-xcode-project.md) | SwiftPM package instead of an Xcode project | Accepted |
 | 0007 | End-of-phase signals: notification + `NSSound`          | Planned |
