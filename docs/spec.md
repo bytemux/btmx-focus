@@ -112,6 +112,11 @@ The timer is **deadline-based**, not tick-counting:
 - Remaining time is displayed **rounded up** to the whole second
   (`29:59.4` shows `30:00`; `00:00` appears only at the deadline).
 - Phase end is scheduled for exactly `endDate`, not detected on the next tick.
+- While the display is asleep or the screen is locked, nobody sees the
+  seconds: the app skips per-second updates and wakes only at `endDate`,
+  then resumes per-second updates on wake / unlock.
+- The popover's view exists only while it's open, so a closed popover costs
+  nothing.
 - Clock changes (manual time change, time zone change): only absolute
   instants are stored, so time zone changes have no effect; a manual clock
   change is handled by recomputing from `endDate` (an observed jump of more
@@ -201,17 +206,18 @@ Rules:
 
 ### 3.8 Diagnostics — **MVP**
 
-- Every user and system action (play, pause, skip, reset, popover
-  open/close, phase end, system sleep, clock change, notification
-  permission result, launch, quit) is appended as a timestamped breadcrumb
-  with the state before → after to `breadcrumbs.log`, written unbuffered so
-  it survives a crash. Also mirrored to the unified log
-  (subsystem `com.btmx.focus`).
-- Fatal signals (including Swift runtime traps) append a `FATAL` line, then
-  the app crashes normally so macOS still writes its `.ips` report.
-- If the previous session didn't exit cleanly, the next launch saves
-  `crash-<date>.log` with the crash reason, the **last user action** and the
-  last 100 breadcrumbs.
+- No disk writes during normal use. The last 50 actions (play, pause, skip,
+  reset, popover open/close, phase end, system sleep, clock change,
+  notification permission result, launch, quit), each with the state
+  before → after, are kept **in memory** and mirrored to the unified log
+  (subsystem `com.btmx.focus`, not persisted by default).
+- Fatal signals (including Swift runtime traps) write the crash reason, the
+  **last user action** and those recent actions to a crash file, then the
+  app crashes normally so macOS still writes its `.ips` report. The next
+  launch names it `crash-<date>.log`; only the **5 newest** are kept.
+- **Debug Logging** (`⋯` menu, off by default) additionally appends every
+  action to `breadcrumbs.log`, rotated at 512 KB with one previous file
+  kept, so at most **1 MB** on disk.
 - Logs stay on the Mac (sandbox container `Library/Logs/btmx-focus/`);
   `⋯` → "Show Logs in Finder" opens the folder.
 
@@ -243,7 +249,7 @@ ADR before or during implementation.
 | UI framework     | AppKit `NSStatusItem` + `NSPopover` hosting SwiftUI views (`MenuBarExtra` can't render a monospaced-digit label) | [0002](adr/0002-status-item-with-appkit.md) |
 | Min. macOS       | macOS 15 (`@Observable`, `onKeyPress`, SwiftData, `SMAppService`)      | 0003 |
 | State            | Pure, testable `TimerEngine` (value-type state + actions, clock injected) wrapped by an `@Observable @MainActor` model the UI binds to | 0004 |
-| Time source      | Wall clock (`Date`) for deadlines; a single `Task.sleep` to the next instant the displayed second changes (50 ms tolerance), none while not running; reset on `NSWorkspace.willSleepNotification` | 0005 |
+| Time source      | Wall clock (`Date`) for deadlines; a single `Task.sleep` to the next instant the displayed second changes (50 ms tolerance), only to the phase end while the display is asleep or locked, none while not running; reset on `NSWorkspace.willSleepNotification` | 0005 |
 | Signals          | `UNUserNotificationCenter` (silent) + `NSSound` with built-in system sounds | 0007 |
 | Persistence      | None in MVP. `UserDefaults` for settings (v0.2); SwiftData for tasks & history (v0.4+) | later |
 | Project layout   | One SwiftPM package: `BtmxFocusCore` library (engine), `BtmxFocus` executable (app), tests; `scripts/build-app.sh` wraps the binary into a signed `.app`. No `.xcodeproj` | [0006](adr/0006-swiftpm-package-instead-of-xcode-project.md) |

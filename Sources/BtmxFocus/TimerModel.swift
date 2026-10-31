@@ -13,6 +13,11 @@ final class TimerModel {
     @ObservationIgnored private let signaler: PhaseSignaler
     @ObservationIgnored private var tickTask: Task<Void, Never>?
     @ObservationIgnored private var observers: [NSObjectProtocol] = []
+    @ObservationIgnored private var displayAsleep = false
+    @ObservationIgnored private var screenLocked = false
+    /// While nobody can see the menu bar, skip per-second redraws and wake only
+    /// at the phase end.
+    private var secondsVisible: Bool { !displayAsleep && !screenLocked }
 
     init(signaler: PhaseSignaler) {
         self.signaler = signaler
@@ -76,14 +81,17 @@ final class TimerModel {
         }
     }
 
-    /// Wakes only when the displayed second changes, and not at all unless running.
+    /// Wakes only when the displayed second changes (or only at the phase end
+    /// while the display can't be seen), and not at all unless running.
     private func scheduleTicks() {
         tickTask?.cancel()
         tickTask = nil
         guard isRunning else { return }
         tickTask = Task { [weak self] in
             while !Task.isCancelled {
-                guard let model = self, let fireDate = model.engine.nextChangeDate(after: Date()) else { return }
+                guard let model = self,
+                      let fireDate = model.engine.nextChangeDate(after: Date(), secondsVisible: model.secondsVisible)
+                else { return }
                 let delay = max(0, fireDate.timeIntervalSinceNow)
                 try? await Task.sleep(for: .seconds(delay), tolerance: .milliseconds(50))
                 guard !Task.isCancelled else { return }
@@ -99,6 +107,11 @@ final class TimerModel {
         ) { [weak self] _ in
             MainActor.assumeIsolated { self?.apply("system sleep, reset") { engine, _ in engine.reset() } }
         })
+        let distributed = DistributedNotificationCenter.default()
+        observeVisibility(workspace, NSWorkspace.screensDidSleepNotification) { $0.displayAsleep = true }
+        observeVisibility(workspace, NSWorkspace.screensDidWakeNotification) { $0.displayAsleep = false }
+        observeVisibility(distributed, .init("com.apple.screenIsLocked")) { $0.screenLocked = true }
+        observeVisibility(distributed, .init("com.apple.screenIsUnlocked")) { $0.screenLocked = false }
         observers.append(NotificationCenter.default.addObserver(
             forName: .NSSystemClockDidChange, object: nil, queue: .main
         ) { [weak self] _ in
@@ -106,6 +119,20 @@ final class TimerModel {
                 CrashLog.record("system clock changed")
                 self?.tick()
                 self?.scheduleTicks()
+            }
+        })
+    }
+
+    private func observeVisibility(
+        _ center: NotificationCenter, _ name: Notification.Name, update: @escaping @MainActor (TimerModel) -> Void
+    ) {
+        observers.append(center.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
+            MainActor.assumeIsolated {
+                guard let model = self else { return }
+                update(model)
+                CrashLog.record("\(name.rawValue), seconds visible: \(model.secondsVisible)")
+                model.tick()
+                model.scheduleTicks()
             }
         })
     }

@@ -4,6 +4,7 @@ import SwiftUI
 
 struct PopoverView: View {
     let model: TimerModel
+    @AppStorage(CrashLog.debugLoggingKey) private var debugLogging = false
 
     var body: some View {
         VStack(spacing: 12) {
@@ -44,6 +45,7 @@ struct PopoverView: View {
                 Spacer()
 
                 Menu {
+                    Toggle("Debug Logging", isOn: $debugLogging)
                     Button("Show Logs in Finder") {
                         NSWorkspace.shared.activateFileViewerSelecting([CrashLog.directory])
                     }
@@ -66,6 +68,10 @@ struct PopoverView: View {
         .frame(width: 240)
         .focusable()
         .focusEffectDisabled()
+        .onChange(of: debugLogging) { _, enabled in
+            CrashLog.setDebugLogging(enabled)
+            CrashLog.record("debug logging \(enabled ? "on" : "off")")
+        }
         .onKeyPress(.space) {
             model.togglePlayPause()
             return .handled

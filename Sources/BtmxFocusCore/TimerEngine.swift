@@ -104,11 +104,14 @@ public struct TimerEngine: Sendable, Equatable {
     }
 
     /// The next instant the displayed whole-second value changes (or the
-    /// phase ends), or `nil` when the clock isn't moving.
-    public func nextChangeDate(after now: Date) -> Date? {
+    /// phase ends), or `nil` when the clock isn't moving. With
+    /// `secondsVisible: false` (nobody can see the display) only the phase end
+    /// matters, so it returns the deadline itself.
+    public func nextChangeDate(after now: Date, secondsVisible: Bool = true) -> Date? {
         guard case let .running(_, endDate) = state else { return nil }
         let left = endDate.timeIntervalSince(now)
         guard left > 0 else { return now }
+        guard secondsVisible else { return endDate }
         return endDate - (left.rounded(.up) - 1)
     }
 }

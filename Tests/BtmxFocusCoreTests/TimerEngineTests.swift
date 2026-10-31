@@ -98,6 +98,15 @@ struct TimerEngineTests {
     }
 }
 
+extension TimerEngineTests {
+    @Test func nextChangeIsDeadlineWhenSecondsNotVisible() {
+        let engine = TimerEngine(state: .running(.focus, endDate: at(1800)))
+        #expect(engine.nextChangeDate(after: at(0.4), secondsVisible: false) == at(1800))
+        #expect(engine.nextChangeDate(after: at(1801), secondsVisible: false) == at(1801))
+        #expect(TimerEngine().nextChangeDate(after: t0, secondsVisible: false) == nil)
+    }
+}
+
 struct ClockFormatTests {
     @Test(arguments: [
         (1800.0, "30:00"),

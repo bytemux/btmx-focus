@@ -47,20 +47,19 @@ For a debug build: `scripts/build-app.sh debug`.
 
 To rebuild while the app is running, quit it first (`⋯` → Quit, or
 `osascript -e 'quit app "btmx-focus"'`). macOS allows only one instance.
-`pkill` also works but counts as an unclean exit, so the next launch writes
-a `crash-*.log`.
+`pkill` also works.
 
 ### Logs & crash reports
 
-Breadcrumbs of every action and crash logs are in
-`~/Library/Containers/com.btmx.focus/Data/Library/Logs/btmx-focus/`
+Logs are in `~/Library/Containers/com.btmx.focus/Data/Library/Logs/btmx-focus/`
 (`~/Library/Logs/btmx-focus/` under `swift run`); `⋯` → "Show Logs in Finder"
-opens it.
+opens it. Nothing is written there during normal use.
 
-- `breadcrumbs.log`: current session, one line per action with state
-  before → after.
-- `crash-<date>.log`: written at launch if the previous session crashed;
-  starts with the crash reason and the last user action.
+- `crash-<date>.log`: written when the app crashes; starts with the crash
+  reason and the last user action, then the last 50 actions. The 5 newest
+  are kept.
+- `breadcrumbs.log` (+ `breadcrumbs.previous.log`): only with `⋯` → Debug
+  Logging on; every action with state before → after, capped at 1 MB total.
 - macOS's own report with the stack trace:
   `~/Library/Logs/DiagnosticReports/btmx-focus-*.ips`.
 

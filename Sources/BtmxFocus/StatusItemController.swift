@@ -22,7 +22,6 @@ final class StatusItemController: NSObject {
 
         popover.behavior = .transient
         popover.delegate = self
-        popover.contentViewController = NSHostingController(rootView: PopoverView(model: model))
 
         anchorWindow.isOpaque = false
         anchorWindow.backgroundColor = .clear
@@ -50,6 +49,8 @@ final class StatusItemController: NSObject {
         CrashLog.record("popover open")
         anchorWindow.setFrame(iconFrame, display: false)
         anchorWindow.orderFront(nil)
+        // Content exists only while shown, so a closed popover never redraws.
+        popover.contentViewController = NSHostingController(rootView: PopoverView(model: model))
         NSApp.activate()
         popover.show(relativeTo: anchor.bounds, of: anchor, preferredEdge: .minY)
         popover.contentViewController?.view.window?.makeKey()
@@ -105,5 +106,6 @@ extension StatusItemController: NSPopoverDelegate {
         CrashLog.record("popover close")
         lastClose = Date()
         anchorWindow.orderOut(nil)
+        popover.contentViewController = nil
     }
 }
