@@ -1,1 +1,8 @@
-sources/
+# Reference screenshots/notes (main checkout only). Matched by file type because
+# ignore rules are case-insensitive here and a plain `sources/` also hides `Sources/`.
+/sources/*.png
+/sources/*.md
+.build/
+build/
+.swiftpm/
+.DS_Store
