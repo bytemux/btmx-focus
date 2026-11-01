@@ -1,5 +1,5 @@
 import AppKit
-import BtmxFocusCore
+import BtmxFocusKit
 import Observation
 import SwiftUI
 
@@ -85,32 +85,8 @@ final class StatusItemController: NSObject {
 
     private func draw() {
         guard let button = statusItem.button else { return }
-        let state = model.state
-        button.image = statusImage(for: state)
-
-        let font = NSFont.monospacedDigitSystemFont(ofSize: NSFont.menuBarFont(ofSize: 0).pointSize, weight: .regular)
-        // Hiding the time keeps the icon, which still shows the running colour.
-        let text = settings.preferences.showTimerInMenuBar ? model.menuBarText : nil
-        let title = text.map { $0 + " " } ?? ""
-        button.attributedTitle = NSAttributedString(string: title, attributes: [.font: font])
-        // Icon to the right of the time: status items grow to the left, so the
-        // icon stays put when the time appears or disappears.
-        button.imagePosition = title.isEmpty ? .imageOnly : .imageTrailing
-        button.setAccessibilityLabel(PhaseStyle.accessibilityLabel(state: state, remaining: model.remaining))
-    }
-
-    /// Red while focusing, green while resting; a template image (follows the
-    /// menu bar's white/gray) when the timer isn't running.
-    private func statusImage(for state: TimerState) -> NSImage? {
-        guard let image = NSImage(systemSymbolName: PhaseStyle.statusSymbol(for: state), accessibilityDescription: nil)
-        else { return nil }
-        guard let color = PhaseStyle.runningColor(for: state) else {
-            image.isTemplate = true
-            return image
-        }
-        let colored = image.withSymbolConfiguration(.init(paletteColors: [color])) ?? image
-        colored.isTemplate = false
-        return colored
+        StatusItemPresentation(engine: model.engine, preferences: settings.preferences, now: model.now)
+            .apply(to: button)
     }
 }
 

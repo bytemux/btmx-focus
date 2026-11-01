@@ -1,11 +1,12 @@
 import AppKit
 import BtmxFocusCore
+import BtmxFocusKit
 import UserNotifications
 
 /// End-of-phase signal: a built-in system sound plus a silent notification.
 /// The sound is played by the app so it is heard even if notifications are denied.
 @MainActor
-final class PhaseSignaler {
+final class PhaseSignaler: PhaseSignalSink {
     private let notificationDelegate = ForegroundNotificationDelegate()
     private var requestedAuthorization = false
 

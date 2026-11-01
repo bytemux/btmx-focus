@@ -15,7 +15,10 @@ or extensions.
 Keep everything in one SwiftPM package:
 
 - `BtmxFocusCore`: the pure engine library, tested with Swift Testing.
-- `BtmxFocus`: the executable app.
+- `BtmxFocusKit`: the app layer (models, views, status-item presentation),
+  unit- and snapshot-tested with `swift test` (added later; see
+  `docs/testing.md`).
+- `BtmxFocus`: the executable app, thin AppKit wiring only.
 
 `scripts/build-app.sh` builds the executable and assembles
 `build/btmx-focus.app` with `Support/Info.plist` (`LSUIElement`, bundle id

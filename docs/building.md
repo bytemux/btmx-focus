@@ -6,8 +6,14 @@ script wraps the built binary into a signed `.app` bundle.
 ```
 Package.swift
 Sources/BtmxFocusCore/     timer engine + formatting (pure, no UI)
-Sources/BtmxFocus/         AppKit/SwiftUI app: status item, popover, signals
+Sources/BtmxFocusKit/      app layer: TimerModel, SettingsStore, views,
+                           status-item presentation, crash log
+Sources/BtmxFocus/         thin AppKit wiring: app delegate, status item,
+                           Settings window, end-of-phase signals
+Sources/BtmxFocusTestSupport/  fake clock and harness shared by the tests
 Tests/BtmxFocusCoreTests/  Swift Testing tests for the engine
+Tests/BtmxFocusKitTests/   app-layer unit tests
+Tests/BtmxFocusSnapshotTests/  snapshot tests (Xcode only) + reference images
 Support/                   Info.plist + entitlements for the .app bundle
 scripts/build-app.sh       builds build/btmx-focus.app
 ```
@@ -86,7 +92,8 @@ it for quick UI iteration only.
 swift test
 ```
 
-Engine tests use a fake clock, so they run instantly.
+Unit tests use a fake clock and snapshot tests compare rendered views with
+committed reference images; see `docs/testing.md`.
 
 ## Lint & format
 

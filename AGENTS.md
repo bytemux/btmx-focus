@@ -1,12 +1,15 @@
 # btmx-focus
 
 Native macOS menu-bar focus timer. Spec: `docs/spec.md`. ADRs: `docs/adr/`.
-Build, run, logs: `docs/building.md`.
+Build, run, logs: `docs/building.md`. Tests: `docs/testing.md`.
 
 ## Commands
 
+Run `swift test` after every change.
+
 ```sh
-swift test                                   # engine tests
+swift test                                   # unit + snapshot tests
+SNAPSHOT_RECORD=1 swift test                 # re-record snapshots
 scripts/build-app.sh && open build/btmx-focus.app
 swiftformat . && swiftlint
 ```
@@ -18,9 +21,9 @@ same path for SwiftLint).
 ## Testing the UI
 
 Do not use computer use, screenshots or screen recording. Verify what you
-can with `swift test`, a clean build and the logs (`crash-*.log`, and
-`breadcrumbs.log` with Debug Logging on). Then hand over to the user, who tests the UI by hand, and
-say what to look for.
+can with `swift test` (including the snapshot tests), a clean build and the
+logs (`crash-*.log`, and `breadcrumbs.log` with Debug Logging on). Then hand
+over to the user, who tests the UI by hand, and say what to look for.
 
 ## Agent skills
 

@@ -2,12 +2,17 @@ import AppKit
 import BtmxFocusCore
 import SwiftUI
 
-struct PopoverView: View {
+public struct PopoverView: View {
     let model: TimerModel
     let openSettings: () -> Void
     @AppStorage(CrashLog.debugLoggingKey) private var debugLogging = false
 
-    var body: some View {
+    public init(model: TimerModel, openSettings: @escaping () -> Void) {
+        self.model = model
+        self.openSettings = openSettings
+    }
+
+    public var body: some View {
         VStack(spacing: 12) {
             Text(PhaseStyle.name(of: model.state.phase))
                 .font(.title3)
@@ -41,7 +46,7 @@ struct PopoverView: View {
                 } label: {
                     Label("Reset", systemImage: "arrow.counterclockwise")
                 }
-                .disabled(model.state == .ready(.focus))
+                .disabled(!model.canReset)
 
                 Spacer()
 

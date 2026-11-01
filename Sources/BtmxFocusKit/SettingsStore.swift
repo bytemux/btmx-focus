@@ -6,8 +6,8 @@ import Observation
 /// leaves a breadcrumb; observers (e.g. the status item) pick it up immediately.
 @MainActor
 @Observable
-final class SettingsStore {
-    var preferences: Preferences {
+public final class SettingsStore {
+    public var preferences: Preferences {
         didSet {
             let changes = preferences.changes(from: oldValue)
             guard !changes.isEmpty else { return }
@@ -18,7 +18,7 @@ final class SettingsStore {
 
     @ObservationIgnored private let defaults: UserDefaults
 
-    init(defaults: UserDefaults = .standard) {
+    public init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
         preferences = Preferences(defaults: defaults)
     }
