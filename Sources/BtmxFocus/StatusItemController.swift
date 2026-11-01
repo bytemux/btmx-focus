@@ -7,6 +7,8 @@ import SwiftUI
 @MainActor
 final class StatusItemController: NSObject {
     private let model: TimerModel
+    private let settings: SettingsStore
+    private let settingsWindow: SettingsWindowController
     private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
     private let popover = NSPopover()
     /// Invisible, fixed window over the icon that the open popover hangs from.
@@ -16,8 +18,10 @@ final class StatusItemController: NSObject {
     private let anchorWindow = NSWindow(contentRect: .zero, styleMask: .borderless, backing: .buffered, defer: true)
     private var lastClose = Date.distantPast
 
-    init(model: TimerModel) {
+    init(model: TimerModel, settings: SettingsStore, settingsWindow: SettingsWindowController) {
         self.model = model
+        self.settings = settings
+        self.settingsWindow = settingsWindow
         super.init()
 
         popover.behavior = .transient
@@ -50,10 +54,17 @@ final class StatusItemController: NSObject {
         anchorWindow.setFrame(iconFrame, display: false)
         anchorWindow.orderFront(nil)
         // Content exists only while shown, so a closed popover never redraws.
-        popover.contentViewController = NSHostingController(rootView: PopoverView(model: model))
+        popover.contentViewController = NSHostingController(
+            rootView: PopoverView(model: model, openSettings: { [weak self] in self?.openSettings() })
+        )
         NSApp.activate()
         popover.show(relativeTo: anchor.bounds, of: anchor, preferredEdge: .minY)
         popover.contentViewController?.view.window?.makeKey()
+    }
+
+    private func openSettings() {
+        popover.performClose(nil)
+        settingsWindow.show()
     }
 
     /// The icon's frame in screen coordinates; it sits at the item's trailing edge.
@@ -78,7 +89,9 @@ final class StatusItemController: NSObject {
         button.image = statusImage(for: state)
 
         let font = NSFont.monospacedDigitSystemFont(ofSize: NSFont.menuBarFont(ofSize: 0).pointSize, weight: .regular)
-        let title = model.menuBarText.map { $0 + " " } ?? ""
+        // Hiding the time keeps the icon, which still shows the running colour.
+        let text = settings.preferences.showTimerInMenuBar ? model.menuBarText : nil
+        let title = text.map { $0 + " " } ?? ""
         button.attributedTitle = NSAttributedString(string: title, attributes: [.font: font])
         // Icon to the right of the time: status items grow to the left, so the
         // icon stays put when the time appears or disappears.

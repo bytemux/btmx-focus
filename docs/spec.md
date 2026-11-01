@@ -251,7 +251,7 @@ ADR before or during implementation.
 | State            | Pure, testable `TimerEngine` (value-type state + actions, clock injected) wrapped by an `@Observable @MainActor` model the UI binds to | 0004 |
 | Time source      | Wall clock (`Date`) for deadlines; a single `Task.sleep` to the next instant the displayed second changes (50 ms tolerance), only to the phase end while the display is asleep or locked, none while not running; reset on `NSWorkspace.willSleepNotification` | 0005 |
 | Signals          | `UNUserNotificationCenter` (silent) + `NSSound` with built-in system sounds | 0007 |
-| Persistence      | None in MVP. `UserDefaults` for settings (v0.2); SwiftData for tasks & history (v0.4+) | later |
+| Persistence      | None in MVP. `UserDefaults` for settings through a `Preferences` value type (v0.2); SwiftData for tasks & history (v0.4+) | [0008](adr/0008-settings-in-userdefaults-through-preferences.md) |
 | Project layout   | One SwiftPM package: `BtmxFocusCore` library (engine), `BtmxFocus` executable (app), tests; `scripts/build-app.sh` wraps the binary into a signed `.app`. No `.xcodeproj` | [0006](adr/0006-swiftpm-package-instead-of-xcode-project.md) |
 | Identity         | Product name `btmx-focus`; bundle id proposal `com.btmx.focus`          | — |
 | Tests            | Swift Testing (`@Test`) for engine logic with a fake clock; covers state transitions, phase end, sleep reset, rounding | — |
