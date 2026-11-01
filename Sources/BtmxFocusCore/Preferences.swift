@@ -46,19 +46,31 @@ public extension Preferences {
         volume = read("volume", standard.volume)
     }
 
-    func save(to defaults: UserDefaults) {
-        for (key, value) in settings {
-            defaults.set(value, forKey: key)
+    /// Writes only the settings that differ from `old`, so settings the user
+    /// never touched keep following their default.
+    func save(to defaults: UserDefaults, changedFrom old: Preferences) {
+        for change in changedSettings(from: old) {
+            defaults.set(change.new, forKey: change.key)
         }
     }
 
     /// e.g. `["showTimerInMenuBar true → false"]`, for the recent-actions log.
     func changes(from old: Preferences) -> [String] {
+        changedSettings(from: old).map { "\($0.key) \($0.old) → \($0.new)" }
+    }
+
+    private struct Change {
+        let key: String
+        let old: Any
+        let new: Any
+    }
+
+    private func changedSettings(from old: Preferences) -> [Change] {
         zip(old.settings, settings).compactMap { before, after in
             let (key, oldValue) = before
-            let oldText = String(describing: oldValue)
-            let newText = String(describing: after.1)
-            return oldText == newText ? nil : "\(key) \(oldText) → \(newText)"
+            let newValue = after.1
+            return String(describing: oldValue) == String(describing: newValue)
+                ? nil : Change(key: key, old: oldValue, new: newValue)
         }
     }
 

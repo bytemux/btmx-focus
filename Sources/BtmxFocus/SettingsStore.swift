@@ -3,7 +3,7 @@ import Foundation
 import Observation
 
 /// The live settings. Every change is saved to `UserDefaults` at once and
-/// leaves a breadcrumb; observers (status item, timer) pick it up immediately.
+/// leaves a breadcrumb; observers (e.g. the status item) pick it up immediately.
 @MainActor
 @Observable
 final class SettingsStore {
@@ -11,7 +11,7 @@ final class SettingsStore {
         didSet {
             let changes = preferences.changes(from: oldValue)
             guard !changes.isEmpty else { return }
-            preferences.save(to: defaults)
+            preferences.save(to: defaults, changedFrom: oldValue)
             CrashLog.record("settings: \(changes.joined(separator: ", "))")
         }
     }

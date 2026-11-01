@@ -40,18 +40,25 @@ struct PreferencesTests {
         preferences.focusEndSound = ""
         preferences.breakEndSound = "Ping"
         preferences.volume = 0.25
-        preferences.save(to: defaults)
+        preferences.save(to: defaults, changedFrom: Preferences())
 
         #expect(Preferences(defaults: defaults) == preferences)
+    }
+
+    /// Settings the user never touched follow future changes to their default.
+    @Test func savingWritesOnlyTheChangedSettings() {
+        let defaults = freshDefaults()
+        var preferences = Preferences()
+        preferences.showTimerInMenuBar = false
+        preferences.save(to: defaults, changedFrom: Preferences())
+        #expect(defaults.object(forKey: "showTimerInMenuBar") as? Bool == false)
+        #expect(defaults.object(forKey: "focusMinutes") == nil)
     }
 
     @Test func valuesOfTheWrongTypeFallBackToTheirDefault() {
         let defaults = freshDefaults()
         defaults.set("loud", forKey: "volume")
-        defaults.set(false, forKey: "showTimerInMenuBar")
-        let loaded = Preferences(defaults: defaults)
-        #expect(loaded.volume == 1.0)
-        #expect(loaded.showTimerInMenuBar == false)
+        #expect(Preferences(defaults: defaults).volume == 1.0)
     }
 
     @Test func describesOnlyTheChangedSettings() {
