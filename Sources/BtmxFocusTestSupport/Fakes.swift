@@ -49,8 +49,10 @@ public final class FakeClock: TimerClock {
 
 /// Lets tasks woken on the main actor run. A woken tick task needs a few hops
 /// (resume, tick, schedule the next sleep); 20 yields leaves ample headroom.
-/// If `TimerModel` ever adds awaits to its tick loop and tests turn flaky,
-/// raise this or switch to a deterministic executor.
+/// Deterministic, not timing-based: the model, its tick task and this clock
+/// all run on the main actor and nothing waits on real time, so the hop count
+/// is fixed by the code, not by machine load. If `TimerModel` ever adds awaits
+/// to its tick loop, tests fail consistently; raise the count.
 @MainActor
 public func settle() async {
     for _ in 0 ..< 20 {

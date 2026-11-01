@@ -32,10 +32,11 @@ snapshot library.
 - Xcode (with its license accepted) is required. The Command Line Tools
   alone are not supported. A missing tool or unaccepted license fails with
   the tool's own message; there is no fallback.
-- This is a deliberate simplification, not a technical necessity: only the
-  snapshot target needs XCTest, and the engine and app-layer tests would
-  run on the Command Line Tools. We chose one supported toolchain over
-  gating the snapshot target per toolchain.
+- `swift test` is the one test command and always includes the snapshot
+  tests, which need XCTest (only Xcode ships it). That is why Xcode is
+  required. Running the unit tests without the snapshots on the Command Line
+  Tools was rejected: a suite that silently skips part of itself on some
+  machines isn't the suite.
 - Tests are written in Swift Testing. Views and the status item are covered
   by swift-snapshot-testing (test-only dependency) with committed reference
   images; see `docs/testing.md`.
