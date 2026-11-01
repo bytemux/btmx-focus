@@ -32,6 +32,10 @@ snapshot library.
 - Xcode (with its license accepted) is required. The Command Line Tools
   alone are not supported. A missing tool or unaccepted license fails with
   the tool's own message; there is no fallback.
+- This is a deliberate simplification, not a technical necessity: only the
+  snapshot target needs XCTest, and the engine and app-layer tests would
+  run on the Command Line Tools. We chose one supported toolchain over
+  gating the snapshot target per toolchain.
 - Tests are written in Swift Testing. Views and the status item are covered
   by swift-snapshot-testing (test-only dependency) with committed reference
   images; see `docs/testing.md`.
@@ -45,7 +49,8 @@ snapshot library.
   experience. Running from Xcode or `swift run` isn't bundled, so features
   that need a bundle (notifications) are turned off there; test them with
   the script.
-- Snapshot references must be re-recorded after macOS updates
+- Snapshot references are recorded on macOS 27, light appearance only, with
+  no CI; they must be re-recorded after macOS updates
   (`SNAPSHOT_RECORD=1 swift test`).
 - Developer ID signing, notarization, an app icon or extensions will need
   either more script steps or an Xcode project (e.g. generated with XcodeGen

@@ -43,11 +43,21 @@ drive it like the system would, with no waiting:
 `Tests/BtmxFocusSnapshotTests/__Snapshots__/`, which are committed:
 
 - `PopoverView` in Ready(Focus), Running(Focus), Paused, Ready(Rest)
-- `SettingsView` on each tab
+- each Settings tab's content (`SettingsTabContent`), without the tab bar:
+  offscreen rendering can't draw its selected segment
 - the status-item button, Ready and Running
 
-Each in the light appearance only, at a fixed size and on a fixed clock. A pixel may
-differ by 2% (`perceptualPrecision: 0.98`) so anti-aliasing noise passes.
+Each at a fixed size, on a fixed clock and with private `UserDefaults`.
+
+**Reference environment: macOS 27, light appearance.** For simplicity the
+snapshots cover the light appearance only and the references are recorded on
+macOS 27; there is no CI, so they are only as reliable as that match. On
+another macOS version expect failures unrelated to your change: re-record on
+macOS 27 or note the new version here when re-recording for everyone.
+
+Each pixel may differ by up to 2% (`perceptualPrecision: 0.98`) so
+anti-aliasing noise passes, but every pixel must pass (`precision` 1.0): one
+pixel beyond that tolerance fails the image.
 
 When a snapshot fails, the message gives the path of the new image next to
 the reference; compare them. If the change is intended, re-record:
@@ -60,11 +70,6 @@ then look at the changed PNGs (`git diff --stat`, open them) before
 committing. Expect to re-record after macOS updates, which change how system
 controls render. A new test with no reference records one and fails once;
 run it again.
-
-Offscreen rendering can't draw window-server materials: in the Settings
-snapshots the tab bar shows the selected segment blank and the other labels
-truncated. The real window looks right. The tab content is what those
-snapshots check.
 
 ## Before committing
 

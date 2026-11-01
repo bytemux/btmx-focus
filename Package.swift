@@ -17,6 +17,8 @@ let package = Package(
         .target(name: "BtmxFocusCore"),
         .target(name: "BtmxFocusKit", dependencies: ["BtmxFocusCore"]),
         .executableTarget(name: "BtmxFocus", dependencies: ["BtmxFocusCore", "BtmxFocusKit"]),
+        // Fakes shared by the test targets. A plain target because SwiftPM
+        // can't share code between test targets; only tests depend on it.
         .target(name: "BtmxFocusTestSupport", dependencies: ["BtmxFocusCore", "BtmxFocusKit"]),
         .testTarget(name: "BtmxFocusCoreTests", dependencies: ["BtmxFocusCore"]),
         .testTarget(name: "BtmxFocusKitTests", dependencies: ["BtmxFocusKit", "BtmxFocusTestSupport"]),

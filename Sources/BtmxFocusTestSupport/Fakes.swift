@@ -47,7 +47,10 @@ public final class FakeClock: TimerClock {
     }
 }
 
-/// Lets tasks woken on the main actor run.
+/// Lets tasks woken on the main actor run. A woken tick task needs a few hops
+/// (resume, tick, schedule the next sleep); 20 yields leaves ample headroom.
+/// If `TimerModel` ever adds awaits to its tick loop and tests turn flaky,
+/// raise this or switch to a deterministic executor.
 @MainActor
 public func settle() async {
     for _ in 0 ..< 20 {

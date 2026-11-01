@@ -8,8 +8,9 @@ import SwiftUI
 import Testing
 
 /// Reference images live in `__Snapshots__/` next to this file and are
-/// committed. `SNAPSHOT_RECORD=1 swift test` re-records them all (expected
-/// after macOS updates); a missing reference is recorded and fails once.
+/// committed, recorded on macOS 27 in the light appearance.
+/// `SNAPSHOT_RECORD=1 swift test` re-records them all (expected after macOS
+/// updates); a missing reference is recorded and fails once.
 private let recordMode: SnapshotTestingConfiguration.Record =
     ProcessInfo.processInfo.environment["SNAPSHOT_RECORD"] == "1" ? .all : .missing
 
@@ -20,15 +21,20 @@ struct SnapshotTests {
     func popover(state: PopoverState) async {
         let harness = TimerHarness()
         await state.drive(harness)
+        // The ⋯ menu's Debug Logging toggle reads @AppStorage; keep it off
+        // the test process's real defaults.
         let view = PopoverView(model: harness.model, openSettings: {})
+            .defaultAppStorage(freshDefaults().defaults)
         assertSnapshot(of: view, size: CGSize(width: 240, height: 226), named: state.rawValue)
     }
 
+    /// Each tab's content without the tab bar, which offscreen rendering
+    /// can't draw (its selected segment comes out blank).
     @Test(arguments: SettingsTab.allCases)
     func settings(tab: SettingsTab) {
         let store = SettingsStore(defaults: freshDefaults().defaults)
-        let view = SettingsView(settings: store, selectedTab: tab)
-        assertSnapshot(of: view, size: CGSize(width: 460, height: 300), named: "\(tab)")
+        let view = SettingsTabContent(tab: tab, settings: store)
+        assertSnapshot(of: view, size: CGSize(width: 460, height: 260), named: "\(tab)")
     }
 
     @Test(arguments: [
@@ -73,9 +79,7 @@ enum PopoverState: String, CaseIterable {
 }
 
 /// Renders `view` at a fixed size on the window background, in the light
-/// appearance. Offscreen rendering misses window-server materials: the
-/// Settings tab bar shows its selected segment blank and the other labels
-/// truncated.
+/// appearance.
 @MainActor
 private func assertSnapshot(
     of view: some View, size: CGSize, named name: String,

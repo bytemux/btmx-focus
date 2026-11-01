@@ -62,6 +62,45 @@ struct TimerModelTests {
         #expect(harness.model.state == .ready(.rest))
     }
 
+    @Test func lockedScreenSkipsPerSecondTicksAndUnlockCatchesUp() async {
+        let harness = TimerHarness()
+        harness.model.play()
+        harness.post(distributed: "com.apple.screenIsLocked")
+        await harness.clock.advance(by: 1)
+        await harness.clock.advance(by: 1)
+        #expect(harness.model.clockText == "30:00")
+
+        harness.post(distributed: "com.apple.screenIsUnlocked")
+        #expect(harness.model.clockText == "29:58")
+        await harness.clock.advance(by: 1)
+        #expect(harness.model.clockText == "29:57")
+    }
+
+    @Test func sleepingDisplaySkipsPerSecondTicksAndWakeCatchesUp() async {
+        let harness = TimerHarness()
+        harness.model.play()
+        harness.post(workspace: NSWorkspace.screensDidSleepNotification)
+        await harness.clock.advance(by: 60)
+        #expect(harness.model.clockText == "30:00")
+
+        harness.post(workspace: NSWorkspace.screensDidWakeNotification)
+        #expect(harness.model.clockText == "29:00")
+        await harness.clock.advance(by: 1)
+        #expect(harness.model.clockText == "28:59")
+    }
+
+    @Test func togglePlayPauseAlternatesRunningAndPaused() async {
+        let harness = TimerHarness()
+        harness.model.togglePlayPause()
+        #expect(harness.model.isRunning)
+        await harness.clock.advance(by: 10)
+        harness.model.togglePlayPause()
+        #expect(harness.model.state == .paused(.focus, remaining: .seconds(1790)))
+        harness.model.togglePlayPause()
+        #expect(harness.model.isRunning)
+        #expect(harness.model.clockText == "29:50")
+    }
+
     @Test func clockChangeReTicks() {
         let harness = TimerHarness()
         harness.model.play()
