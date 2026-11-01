@@ -1,4 +1,5 @@
 import AppKit
+import BtmxFocusKit
 import SwiftUI
 
 /// The one Settings window: AppKit `NSWindow` hosting SwiftUI (ADR 0002,

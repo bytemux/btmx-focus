@@ -21,7 +21,7 @@ scene isn't available without moving to a SwiftUI `App`.
   settings the user never touched follow future changes to their default.
   It also describes what changed between two values, for the recent-actions
   log.
-- `SettingsStore`, an `@Observable` class in the app, holds the live
+- `SettingsStore`, an `@Observable` class in `BtmxFocusKit`, holds the live
   `Preferences`. Every change is saved at once and recorded with
   `CrashLog.record`. Consumers (the status item now; the timer and signaler
   as their settings land) read from it and update through observation.
@@ -36,8 +36,9 @@ scene isn't available without moving to a SwiftUI `App`.
 
 ## Consequences
 
-- Defaults and persistence are covered by `swift test`; the window is
-  checked by hand.
+- Defaults and persistence are covered by `swift test`, and the window's
+  tabs by snapshot tests (`docs/testing.md`); opening and focusing the
+  window is checked by hand.
 - Renaming a `Preferences` property renames its key, so a rename needs a
   migration or users lose that setting.
 - No Save button and no separate model per tab; adding a setting means a

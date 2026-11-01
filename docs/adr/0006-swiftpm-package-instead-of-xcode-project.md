@@ -1,6 +1,6 @@
 # 0006. SwiftPM package instead of an Xcode project
 
-Status: Accepted
+Status: Superseded by 0009
 Date: 2026-10-31
 
 ## Context

@@ -6,8 +6,14 @@ script wraps the built binary into a signed `.app` bundle.
 ```
 Package.swift
 Sources/BtmxFocusCore/     timer engine + formatting (pure, no UI)
-Sources/BtmxFocus/         AppKit/SwiftUI app: status item, popover, signals
+Sources/BtmxFocusKit/      app layer: TimerModel, SettingsStore, views,
+                           status-item presentation, crash log
+Sources/BtmxFocus/         thin AppKit wiring: app delegate, status item,
+                           Settings window, end-of-phase signals
+Sources/BtmxFocusTestSupport/  fake clock and harness shared by the tests
 Tests/BtmxFocusCoreTests/  Swift Testing tests for the engine
+Tests/BtmxFocusKitTests/   app-layer unit tests
+Tests/BtmxFocusSnapshotTests/  snapshot tests + reference images
 Support/                   Info.plist + entitlements for the .app bundle
 scripts/build-app.sh       builds build/btmx-focus.app
 ```
@@ -15,23 +21,12 @@ scripts/build-app.sh       builds build/btmx-focus.app
 ## Requirements
 
 - macOS 15 or newer
-- Swift 6 toolchain: Xcode 16+ **or** the Command Line Tools
-  (`xcode-select --install`)
-- Optional: `brew install swiftlint swiftformat`
+- Xcode 16+ (Swift 6), selected with `xcode-select` and its license
+  accepted (ADR 0009)
+- `brew install swiftlint swiftformat`
 
-If Xcode is installed but you haven't accepted its license, every `swift`
-command fails with "You have not agreed to the Xcode license agreements".
-Either accept it once:
-
-```sh
-sudo xcodebuild -license accept
-```
-
-or run commands against the Command Line Tools instead:
-
-```sh
-export DEVELOPER_DIR=/Library/Developer/CommandLineTools
-```
+If any of these is missing, the command that needs it fails with its own
+message; fix the setup and rerun.
 
 ## Build and launch the app
 
@@ -86,7 +81,8 @@ it for quick UI iteration only.
 swift test
 ```
 
-Engine tests use a fake clock, so they run instantly.
+Unit tests use a fake clock and snapshot tests compare rendered views with
+committed reference images; see `docs/testing.md`.
 
 ## Lint & format
 
@@ -94,12 +90,6 @@ Engine tests use a fake clock, so they run instantly.
 swiftformat .            # apply formatting (config: .swiftformat)
 swiftformat --lint .     # check only
 swiftlint                # config: .swiftlint.yml
-```
-
-With only the Command Line Tools, SwiftLint needs to be told where SourceKit is:
-
-```sh
-TOOLCHAIN_DIR=/Library/Developer/CommandLineTools swiftlint
 ```
 
 ## Editing in Xcode

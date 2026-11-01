@@ -252,16 +252,16 @@ ADR before or during implementation.
 | Time source      | Wall clock (`Date`) for deadlines; a single `Task.sleep` to the next instant the displayed second changes (50 ms tolerance), only to the phase end while the display is asleep or locked, none while not running; reset on `NSWorkspace.willSleepNotification` | 0005 |
 | Signals          | `UNUserNotificationCenter` (silent) + `NSSound` with built-in system sounds | 0007 |
 | Persistence      | None in MVP. `UserDefaults` for settings through a `Preferences` value type (v0.2); SwiftData for tasks & history (v0.4+) | [0008](adr/0008-settings-in-userdefaults-through-preferences.md) |
-| Project layout   | One SwiftPM package: `BtmxFocusCore` library (engine), `BtmxFocus` executable (app), tests; `scripts/build-app.sh` wraps the binary into a signed `.app`. No `.xcodeproj` | [0006](adr/0006-swiftpm-package-instead-of-xcode-project.md) |
+| Project layout   | One SwiftPM package built with Xcode: `BtmxFocusCore` library (engine), `BtmxFocusKit` library (app layer), `BtmxFocus` executable (AppKit wiring), tests; `scripts/build-app.sh` wraps the binary into a signed `.app`. No `.xcodeproj` | [0009](adr/0009-xcode-swift-testing-and-snapshot-tests.md) |
 | Identity         | Product name `btmx-focus`; bundle id proposal `com.btmx.focus`          | — |
-| Tests            | Swift Testing (`@Test`) for engine logic with a fake clock; covers state transitions, phase end, sleep reset, rounding | — |
+| Tests            | Swift Testing (`@Test`) with a fake clock for the engine and app layer; swift-snapshot-testing for views and the status item; see [testing.md](testing.md) | [0009](adr/0009-xcode-swift-testing-and-snapshot-tests.md) |
 | Lint / format    | SwiftLint + SwiftFormat (installed via Homebrew), run in a pre-commit hook / CI | — |
 | Build            | `swift build` / `swift test`; see [building.md](building.md)           | — |
 | Icons            | SF Symbols (SF Symbols app installed for browsing)                     | — |
 | Distribution     | MVP: local build, ad-hoc signed. Later: Developer ID + notarization, possibly Mac App Store | later |
 
 Build and launch instructions: [`docs/building.md`](building.md). The
-package builds with either the Command Line Tools or Xcode.
+package needs Xcode.
 
 ### 5.1 Core module sketch — **MVP**
 
@@ -413,7 +413,7 @@ Based on `sources/reports*.png`:
 11. Ready and Paused states cause no periodic CPU wake-ups (verify in
     Activity Monitor / Instruments).
 12. VoiceOver reads the phase, state and remaining time.
-13. Engine unit tests pass via `swift test`; SwiftLint and SwiftFormat report
+13. Unit and snapshot tests pass via `swift test`; SwiftLint and SwiftFormat report
     no violations.
 
 ---

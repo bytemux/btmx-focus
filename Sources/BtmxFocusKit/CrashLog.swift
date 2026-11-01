@@ -24,9 +24,9 @@ private let recentTextCapacity = 16 * 1024
 /// Logs live in `~/Library/Containers/com.btmx.focus/Data/Library/Logs/btmx-focus/`
 /// for the sandboxed app, or `~/Library/Logs/btmx-focus/` under `swift run`.
 @MainActor
-enum CrashLog {
-    static let directory = URL.libraryDirectory.appending(path: "Logs/btmx-focus", directoryHint: .isDirectory)
-    static let debugLoggingKey = "debugLogging"
+public enum CrashLog {
+    public static let directory = URL.libraryDirectory.appending(path: "Logs/btmx-focus", directoryHint: .isDirectory)
+    public static let debugLoggingKey = "debugLogging"
 
     private static let pendingCrashURL = directory.appending(path: "crash-pending.log")
     private static let breadcrumbsURL = directory.appending(path: "breadcrumbs.log")
@@ -43,7 +43,7 @@ enum CrashLog {
     private static var breadcrumbsBytes = 0
 
     /// Call once, first thing at launch.
-    static func start() {
+    public static func start() {
         try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         keepPreviousCrash()
         pruneCrashLogs()
@@ -59,7 +59,7 @@ enum CrashLog {
         record("launch btmx-focus \(version)")
     }
 
-    static func record(_ message: String) {
+    public static func record(_ message: String) {
         logger.info("\(message, privacy: .public)")
         let line = "\(Date.now.formatted(timestamp)) \(message)"
         recentActions.append(line)
@@ -70,7 +70,7 @@ enum CrashLog {
         appendBreadcrumb(line + "\n")
     }
 
-    static func setDebugLogging(_ enabled: Bool) {
+    public static func setDebugLogging(_ enabled: Bool) {
         if enabled, debugFD < 0 {
             openBreadcrumbs(truncate: false)
         } else if !enabled, debugFD >= 0 {
@@ -79,7 +79,7 @@ enum CrashLog {
         }
     }
 
-    static func markCleanExit() {
+    public static func markCleanExit() {
         record("quit")
     }
 
