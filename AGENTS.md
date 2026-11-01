@@ -21,3 +21,17 @@ Do not use computer use, screenshots or screen recording. Verify what you
 can with `swift test`, a clean build and the logs (`crash-*.log`, and
 `breadcrumbs.log` with Debug Logging on). Then hand over to the user, who tests the UI by hand, and
 say what to look for.
+
+## Agent skills
+
+### Issue tracker
+
+GitHub Issues in `bytemux/btmx-focus`, via the `gh` CLI. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Default vocabulary: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: `GLOSSARY.md` and `docs/adr/` at the repo root. See `docs/agents/domain.md`.
