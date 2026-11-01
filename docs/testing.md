@@ -66,26 +66,14 @@ snapshots the tab bar shows the selected segment blank and the other labels
 truncated. The real window looks right. The tab content is what those
 snapshots check.
 
-## Toolchains
-
-`swift test` must pass with both Xcode and the Command Line Tools:
+## Before committing
 
 ```sh
-swift test
-DEVELOPER_DIR=/Library/Developer/CommandLineTools swift test
+swift test && swiftformat --lint . && swiftlint
 ```
 
-The Command Line Tools ship Swift Testing but not XCTest, which
-swift-snapshot-testing needs. `Package.swift` adds `BtmxFocusSnapshotTests`
-only when the active developer directory has XCTest, so with the Command
-Line Tools the snapshots are skipped and everything else runs. Run the
-snapshots with Xcode before committing UI changes.
-
-Then lint:
-
-```sh
-swiftformat --lint . && swiftlint
-```
+Tests need Xcode (ADR 0009): swift-snapshot-testing builds on XCTest, which
+only Xcode ships.
 
 ## By hand
 

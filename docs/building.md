@@ -13,7 +13,7 @@ Sources/BtmxFocus/         thin AppKit wiring: app delegate, status item,
 Sources/BtmxFocusTestSupport/  fake clock and harness shared by the tests
 Tests/BtmxFocusCoreTests/  Swift Testing tests for the engine
 Tests/BtmxFocusKitTests/   app-layer unit tests
-Tests/BtmxFocusSnapshotTests/  snapshot tests (Xcode only) + reference images
+Tests/BtmxFocusSnapshotTests/  snapshot tests + reference images
 Support/                   Info.plist + entitlements for the .app bundle
 scripts/build-app.sh       builds build/btmx-focus.app
 ```
@@ -21,23 +21,12 @@ scripts/build-app.sh       builds build/btmx-focus.app
 ## Requirements
 
 - macOS 15 or newer
-- Swift 6 toolchain: Xcode 16+ **or** the Command Line Tools
-  (`xcode-select --install`)
-- Optional: `brew install swiftlint swiftformat`
+- Xcode 16+ (Swift 6), selected with `xcode-select` and its license
+  accepted (ADR 0009)
+- `brew install swiftlint swiftformat`
 
-If Xcode is installed but you haven't accepted its license, every `swift`
-command fails with "You have not agreed to the Xcode license agreements".
-Either accept it once:
-
-```sh
-sudo xcodebuild -license accept
-```
-
-or run commands against the Command Line Tools instead:
-
-```sh
-export DEVELOPER_DIR=/Library/Developer/CommandLineTools
-```
+If any of these is missing, the command that needs it fails with its own
+message; fix the setup and rerun.
 
 ## Build and launch the app
 
@@ -101,12 +90,6 @@ committed reference images; see `docs/testing.md`.
 swiftformat .            # apply formatting (config: .swiftformat)
 swiftformat --lint .     # check only
 swiftlint                # config: .swiftlint.yml
-```
-
-With only the Command Line Tools, SwiftLint needs to be told where SourceKit is:
-
-```sh
-TOOLCHAIN_DIR=/Library/Developer/CommandLineTools swiftlint
 ```
 
 ## Editing in Xcode

@@ -32,6 +32,7 @@ Taken from [spec §5](../spec.md#5-technical-approach):
 | 0003 | Minimum macOS version: 15                               | Planned |
 | 0004 | Pure `TimerEngine` + `@Observable` model                | Planned |
 | 0005 | Deadline-based timing; reset on system sleep            | Planned |
-| [0006](0006-swiftpm-package-instead-of-xcode-project.md) | SwiftPM package instead of an Xcode project | Accepted |
+| [0006](0006-swiftpm-package-instead-of-xcode-project.md) | SwiftPM package instead of an Xcode project | Superseded by 0009 |
 | 0007 | End-of-phase signals: notification + `NSSound`          | Planned |
 | [0008](0008-settings-in-userdefaults-through-preferences.md) | Settings in `UserDefaults` through `Preferences` | Accepted |
+| [0009](0009-xcode-swift-testing-and-snapshot-tests.md) | SwiftPM package built with Xcode; Swift Testing + snapshot tests | Accepted |

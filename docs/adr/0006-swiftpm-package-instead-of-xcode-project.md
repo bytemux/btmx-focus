@@ -1,6 +1,6 @@
 # 0006. SwiftPM package instead of an Xcode project
 
-Status: Accepted
+Status: Superseded by 0009
 Date: 2026-10-31
 
 ## Context
@@ -15,10 +15,7 @@ or extensions.
 Keep everything in one SwiftPM package:
 
 - `BtmxFocusCore`: the pure engine library, tested with Swift Testing.
-- `BtmxFocusKit`: the app layer (models, views, status-item presentation),
-  unit- and snapshot-tested with `swift test` (added later; see
-  `docs/testing.md`).
-- `BtmxFocus`: the executable app, thin AppKit wiring only.
+- `BtmxFocus`: the executable app.
 
 `scripts/build-app.sh` builds the executable and assembles
 `build/btmx-focus.app` with `Support/Info.plist` (`LSUIElement`, bundle id

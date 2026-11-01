@@ -14,9 +14,9 @@ scripts/build-app.sh && open build/btmx-focus.app
 swiftformat . && swiftlint
 ```
 
-If Xcode's license isn't accepted, prefix with
-`DEVELOPER_DIR=/Library/Developer/CommandLineTools` (and `TOOLCHAIN_DIR=` the
-same path for SwiftLint).
+Requires Xcode with its license accepted, plus SwiftLint and SwiftFormat. If
+a command fails because one is missing or the license isn't accepted, stop
+and tell the user; don't work around it.
 
 ## Testing the UI
 
