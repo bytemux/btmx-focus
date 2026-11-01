@@ -20,7 +20,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_: Notification) {
         let model = TimerModel(signaler: PhaseSignaler())
-        statusItemController = StatusItemController(model: model)
+        let settings = SettingsStore()
+        statusItemController = StatusItemController(
+            model: model, settings: settings, settingsWindow: SettingsWindowController(settings: settings)
+        )
     }
 
     func applicationWillTerminate(_: Notification) {

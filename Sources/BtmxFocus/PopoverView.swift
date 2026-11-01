@@ -4,6 +4,7 @@ import SwiftUI
 
 struct PopoverView: View {
     let model: TimerModel
+    let openSettings: () -> Void
     @AppStorage(CrashLog.debugLoggingKey) private var debugLogging = false
 
     var body: some View {
@@ -45,6 +46,9 @@ struct PopoverView: View {
                 Spacer()
 
                 Menu {
+                    Button("Settings…", action: openSettings)
+                        .keyboardShortcut(",")
+                    Divider()
                     Toggle("Debug Logging", isOn: $debugLogging)
                     Button("Show Logs in Finder") {
                         NSWorkspace.shared.activateFileViewerSelecting([CrashLog.directory])
@@ -62,7 +66,7 @@ struct PopoverView: View {
             }
             .buttonStyle(.borderless)
             .labelStyle(.iconOnly)
-            .help("Skip, reset or quit")
+            .help("Skip, reset, settings or quit")
         }
         .padding(16)
         .frame(width: 240)

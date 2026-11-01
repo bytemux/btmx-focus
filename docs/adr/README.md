@@ -34,3 +34,4 @@ Taken from [spec §5](../spec.md#5-technical-approach):
 | 0005 | Deadline-based timing; reset on system sleep            | Planned |
 | [0006](0006-swiftpm-package-instead-of-xcode-project.md) | SwiftPM package instead of an Xcode project | Accepted |
 | 0007 | End-of-phase signals: notification + `NSSound`          | Planned |
+| [0008](0008-settings-in-userdefaults-through-preferences.md) | Settings in `UserDefaults` through `Preferences` | Accepted |
