@@ -52,6 +52,10 @@ public struct SettingsTabContent: View {
                 Toggle("Show timer in menu bar", isOn: $settings.preferences.showTimerInMenuBar)
                     .accessibilityIdentifier(AccessibilityID.Settings.showTimerInMenuBar)
                 launchAtLoginToggle
+                Toggle("Auto-start timer", isOn: $settings.preferences.autoStart)
+                    .accessibilityIdentifier(AccessibilityID.Settings.autoStart)
+                Toggle("Skip break if idle", isOn: $settings.preferences.skipBreakIfIdle)
+                    .accessibilityIdentifier(AccessibilityID.Settings.skipBreakIfIdle)
                 Picker("Appearance", selection: $settings.preferences.appearance) {
                     Text("Auto").tag(Appearance.auto)
                     Text("Light").tag(Appearance.light)

@@ -61,11 +61,29 @@ public struct PhaseCompletion: Sendable, Equatable {
     public let next: Phase
     /// The next phase's full length, for the notification text.
     public let nextDuration: Duration
+    /// The break the user was idle through, counted as taken (`next` is
+    /// then Focus); nil when no break was skipped.
+    public let skippedBreak: Phase?
 
-    public init(phase: Phase, next: Phase, nextDuration: Duration) {
+    public init(phase: Phase, next: Phase, nextDuration: Duration, skippedBreak: Phase? = nil) {
         self.phase = phase
         self.next = next
         self.nextDuration = nextDuration
+        self.skippedBreak = skippedBreak
+    }
+}
+
+/// What happens at a phase end, from Settings → General.
+public struct PhaseEndOptions: Sendable, Equatable {
+    /// The next phase starts Running at the previous deadline instead of
+    /// waiting for Play.
+    public var autoStart: Bool
+    /// A break the user was already away for is counted as taken.
+    public var skipBreakIfIdle: Bool
+
+    public init(autoStart: Bool = false, skipBreakIfIdle: Bool = false) {
+        self.autoStart = autoStart
+        self.skipBreakIfIdle = skipBreakIfIdle
     }
 }
 
@@ -80,11 +98,16 @@ public struct TimerEngine: Sendable, Equatable {
     /// Takes effect at once for a Ready phase; a Running phase keeps its
     /// deadline and a Paused one its remaining time.
     public var schedule: Schedule
+    public var phaseEnd: PhaseEndOptions
     /// Focus intervals since the cycle started (Reset or the last long break).
     public private(set) var focusIntervalsInCycle = 0
 
-    public init(schedule: Schedule = .standard, state: TimerState = .ready(.focus)) {
+    public init(
+        schedule: Schedule = .standard, phaseEnd: PhaseEndOptions = PhaseEndOptions(),
+        state: TimerState = .ready(.focus)
+    ) {
         self.schedule = schedule
+        self.phaseEnd = phaseEnd
         self.state = state
     }
 
@@ -115,12 +138,27 @@ public struct TimerEngine: Sendable, Equatable {
     }
 
     /// Completes the running phase once its deadline has passed. The next
-    /// phase is loaded in `.ready` and waits for `play`.
-    public mutating func tick(now: Date) -> TimerEvent? {
+    /// phase is loaded in `.ready` and waits for `play`, or with auto-start
+    /// runs from the old deadline.
+    ///
+    /// `idleTime` is how long the user has had no keyboard or mouse input; it
+    /// is read only when a Focus phase ends with skip-break-if-idle on. Idle
+    /// for at least the coming break's length counts that break as taken and
+    /// loads Focus instead.
+    public mutating func tick(now: Date, idleTime: @autoclosure () -> Duration = .zero) -> TimerEvent? {
         guard case let .running(phase, endDate) = state, now >= endDate else { return nil }
-        let next = phaseAfterCompleting(phase)
-        state = .ready(next)
-        return .phaseCompleted(PhaseCompletion(phase: phase, next: next, nextDuration: schedule.duration(of: next)))
+        var next = phaseAfterCompleting(phase)
+        var skippedBreak: Phase?
+        if phase == .focus, phaseEnd.skipBreakIfIdle, idleTime() >= schedule.duration(of: next) {
+            skippedBreak = next
+            next = .focus
+        }
+        state = phaseEnd.autoStart
+            ? .running(next, endDate: endDate + schedule.duration(of: next))
+            : .ready(next)
+        return .phaseCompleted(PhaseCompletion(
+            phase: phase, next: next, nextDuration: schedule.duration(of: next), skippedBreak: skippedBreak
+        ))
     }
 
     /// Counts a Focus interval and picks Rest or, at the end of the cycle, a

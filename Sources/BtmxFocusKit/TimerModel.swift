@@ -79,6 +79,13 @@ public final class TimerModel {
         apply("schedule change") { engine, _ in engine.schedule = schedule }
     }
 
+    /// Auto-start and skip-break-if-idle from Settings; they apply at the next phase end.
+    public func setPhaseEnd(_ options: PhaseEndOptions) {
+        guard options != engine.phaseEnd else { return }
+        let action = "phase-end options autoStart \(options.autoStart) skipBreakIfIdle \(options.skipBreakIfIdle)"
+        apply(action) { engine, _ in engine.phaseEnd = options }
+    }
+
     /// Applies a user or system action and leaves a breadcrumb with the state change.
     private func apply(_ action: String, _ change: (inout TimerEngine, Date) -> Void) {
         let date = clock.now
@@ -98,8 +105,17 @@ public final class TimerModel {
     private func tick() {
         let date = clock.now
         now = date
-        if case let .phaseCompleted(completion) = engine.tick(now: date) {
-            CrashLog.record("phase end: \(PhaseStyle.name(of: completion.phase)) → \(describe(at: date))")
+        // Idle time is read only if the engine asks (a Focus end with the option on).
+        var idleTime = Duration.zero
+        let event = engine.tick(now: date, idleTime: {
+            idleTime = clock.idleTime
+            return idleTime
+        }())
+        if case let .phaseCompleted(completion) = event {
+            let skipped = completion.skippedBreak.map { phase in
+                ", \(PhaseStyle.name(of: phase)) skipped (idle \(ClockFormat.string(for: idleTime)))"
+            } ?? ""
+            CrashLog.record("phase end: \(PhaseStyle.name(of: completion.phase))\(skipped) → \(describe(at: date))")
             signaler.phaseCompleted(completion)
         }
     }

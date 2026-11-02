@@ -128,7 +128,7 @@ behind the notch), the test fails saying so; quit some menu-bar apps.
   real btmx-focus with its own settings and logs. Only this debug build
   accepts the launch arguments in `E2EContract` (`--e2e-focus-seconds`,
   `--e2e-rest-seconds`, `--e2e-no-notifications`, `--e2e-debug-logging`,
-  `--e2e-reset-settings`). Every test
+  `--e2e-reset-settings`, `--e2e-no-idle-skip`). Every test
   starts a fresh app with its settings wiped.
 - **Driver** (`Sources/BtmxFocusDriver/`): finds elements by accessibility
   identifier (`AccessibilityID` in `BtmxFocusUIContract`, set by the app),

@@ -24,6 +24,16 @@ struct PhaseNotificationTests {
             "Long break over",
             "Ready for 25 min of focus."
         ),
+        (
+            PhaseCompletion(phase: .focus, next: .focus, nextDuration: .seconds(30 * 60), skippedBreak: .rest),
+            "Focus done",
+            "You were away for the break. Ready for 30 min of focus."
+        ),
+        (
+            PhaseCompletion(phase: .focus, next: .focus, nextDuration: .seconds(30 * 60), skippedBreak: .longRest),
+            "Focus done",
+            "You were away for the long break. Ready for 30 min of focus."
+        ),
         // E2E lengths are seconds.
         (
             PhaseCompletion(phase: .focus, next: .rest, nextDuration: .seconds(3)),

@@ -10,6 +10,8 @@ import ServiceManagement
 @MainActor
 public final class FakeClock: TimerClock {
     public private(set) var now: Date
+    /// How long the user has been away; set by the test.
+    public var idleTime = Duration.zero
     private var sleepers: [UUID: (deadline: Date, continuation: CheckedContinuation<Void, Error>)] = [:]
 
     public init(now: Date) {

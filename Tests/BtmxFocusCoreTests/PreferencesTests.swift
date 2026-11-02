@@ -66,6 +66,14 @@ struct PreferencesTests {
         ))
     }
 
+    @Test func phaseEndOptionsFollowTheGeneralSettings() {
+        var preferences = Preferences()
+        #expect(preferences.phaseEnd == PhaseEndOptions(autoStart: false, skipBreakIfIdle: true))
+        preferences.autoStart = true
+        preferences.skipBreakIfIdle = false
+        #expect(preferences.phaseEnd == PhaseEndOptions(autoStart: true, skipBreakIfIdle: false))
+    }
+
     @Test func emptyDefaultsLoadTheDefaults() {
         #expect(Preferences(defaults: freshDefaults()) == Preferences())
     }

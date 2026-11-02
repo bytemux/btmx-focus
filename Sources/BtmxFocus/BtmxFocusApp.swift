@@ -59,10 +59,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_: Notification) {
         let settings = SettingsStore()
         let model = TimerModel(
-            engine: TimerEngine(schedule: schedule(from: settings)),
+            engine: TimerEngine(schedule: schedule(from: settings), phaseEnd: phaseEnd(from: settings)),
             signaler: PhaseSignaler(settings: settings, notificationsEnabled: e2e?.notificationsEnabled ?? true)
         )
-        pushSchedule(from: settings, to: model)
+        pushTimerSettings(from: settings, to: model)
         statusItemController = StatusItemController(
             model: model, settings: settings, settingsWindow: SettingsWindowController(settings: settings)
         )
@@ -75,19 +75,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         e2e?.schedule(from: settings.preferences) ?? settings.preferences.schedule
     }
 
-    /// Hands every change of the interval settings to the timer, and re-arms
-    /// observation for the next one. Only the settings are tracked, not the
-    /// model, so timer ticks don't wake this.
-    private func pushSchedule(from settings: SettingsStore, to model: TimerModel) {
-        let newSchedule = withObservationTracking {
-            self.schedule(from: settings)
+    private func phaseEnd(from settings: SettingsStore) -> PhaseEndOptions {
+        e2e?.phaseEnd(from: settings.preferences) ?? settings.preferences.phaseEnd
+    }
+
+    /// Hands every change of the interval and phase-end settings to the
+    /// timer, and re-arms observation for the next one. Only the settings are
+    /// tracked, not the model, so timer ticks don't wake this.
+    private func pushTimerSettings(from settings: SettingsStore, to model: TimerModel) {
+        let (newSchedule, phaseEnd) = withObservationTracking {
+            (self.schedule(from: settings), self.phaseEnd(from: settings))
         } onChange: { [weak self, weak settings, weak model] in
             Task { @MainActor in
                 guard let self, let settings, let model else { return }
-                self.pushSchedule(from: settings, to: model)
+                self.pushTimerSettings(from: settings, to: model)
             }
         }
         model.setSchedule(newSchedule)
+        model.setPhaseEnd(phaseEnd)
     }
 
     func applicationWillTerminate(_: Notification) {

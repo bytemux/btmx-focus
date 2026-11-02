@@ -144,3 +144,12 @@ app:
    that volume, and a phase end then plays at that volume too; with
    Completion notifications off a phase end shows no banner, and on a fresh
    install (`tccutil reset All com.btmx.focus`) the first ▶ asks nothing.
+10. Settings → General: with "Auto-start timer" on, a phase end plays the
+    sound and the next phase is already running (E2E app with
+    `--e2e-focus-seconds 5 --e2e-rest-seconds 5`; move the mouse near
+    each phase end, or idle skip takes the 5 s break). With "Skip break if
+    idle" on (default), don't touch the keyboard or mouse through a Focus
+    phase end: the app goes straight to Ready(Focus) (Running with
+    auto-start), the banner says you were away for the break, and the log
+    shows `Rest skipped (idle …)`. Touch the mouse just before the end and
+    the break comes as usual.
