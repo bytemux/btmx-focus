@@ -330,12 +330,21 @@ struct PhaseEndOptionsTests {
         #expect(engine.state == .ready(.rest))
     }
 
-    @Test func idleSkipWithAutoStartRunsFocusFromTheDeadline() {
+    @Test func idleSkipWithAutoStartLeavesFocusWaitingForPlay() {
         var engine = TimerEngine(
             schedule: shortSchedule, phaseEnd: PhaseEndOptions(autoStart: true, skipBreakIfIdle: true)
         )
         engine.play(now: t0)
         _ = engine.tick(now: at(60.5), idleTime: .seconds(600))
-        #expect(engine.state == .running(.focus, endDate: at(120)))
+        #expect(engine.state == .ready(.focus))
+    }
+
+    @Test func autoStartRunsTheBreakWhenTheUserIsntIdleLongEnough() {
+        var engine = TimerEngine(
+            schedule: shortSchedule, phaseEnd: PhaseEndOptions(autoStart: true, skipBreakIfIdle: true)
+        )
+        engine.play(now: t0)
+        _ = engine.tick(now: at(60.5), idleTime: .seconds(5))
+        #expect(engine.state == .running(.rest, endDate: at(70)))
     }
 }

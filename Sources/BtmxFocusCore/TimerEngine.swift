@@ -175,7 +175,7 @@ public struct TimerEngine: Sendable, Equatable {
     /// `idleTime` is how long the user has had no keyboard or mouse input; it
     /// is read only when a Focus phase ends with skip-break-if-idle on. Idle
     /// for at least the coming break's length counts that break as taken and
-    /// loads Focus instead.
+    /// loads Focus instead, Ready even with auto-start.
     public mutating func tick(now: Date, idleTime: @autoclosure () -> Duration = .zero) -> TimerEvent? {
         guard case let .running(phase, endDate) = state, now >= endDate else { return nil }
         var next = phaseAfterCompleting(phase)
@@ -184,7 +184,9 @@ public struct TimerEngine: Sendable, Equatable {
             skippedBreak = next
             next = .focus
         }
-        state = phaseEnd.autoStart
+        // A skipped break means nobody is there: Focus waits for them, even
+        // with auto-start, rather than running Focus after Focus unattended.
+        state = phaseEnd.autoStart && skippedBreak == nil
             ? .running(next, endDate: endDate + schedule.duration(of: next))
             : .ready(next)
         return .phaseCompleted(PhaseCompletion(

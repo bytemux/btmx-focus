@@ -31,9 +31,9 @@ chooses what happens at `NSWorkspace.willSleepNotification`:
   with every deadline that has passed:
   - Each passed phase is completed in order, exactly as if the Mac had
     been awake: the long-break cycle advances, Idle skip applies (using
-    the idle time read at wake), each completed Focus counts towards the
-    daily tally on the day its deadline fell, and each phase end is
-    logged.
+    the idle time read at wake) and each phase end is logged. A Focus that
+    ended while asleep does **not** count towards the daily tally: nobody
+    worked it.
   - Only the **latest** phase end is signalled: one sound, one banner,
     describing the phase that is now Ready (or, with Auto-start, already
     Running with part of its time gone).
@@ -47,11 +47,11 @@ manual clock jump past several deadlines.
 
 - ADR 0005's deadline-based timing still holds; its sleep-reset decision
   is now just the default (0005 is amended, not superseded).
-- With Keep counting and Auto-start, a long sleep advances the cycle and
-  adds the Focus intervals that ran while asleep to "Today" (with Idle
-  skip, breaks may be skipped too, so more of them are Focus). That is the
-  literal meaning of "keep counting"; users who don't want it choose Reset
-  or Pause.
+- With Keep counting and Auto-start, a long sleep advances the cycle
+  (the literal meaning of "keep counting") but leaves "Today" as it was.
+  The model knows a phase ended while asleep because it completed it
+  between `willSleep` and the catch-up at `didWake`, whichever tick runs
+  first after wake.
 - Whether `CGEventSource` idle time includes the time asleep decides
   whether Idle skip fires for a Focus that ended while asleep; that is a
   manual check, not something the tests can see.

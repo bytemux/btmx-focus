@@ -23,4 +23,6 @@ opt-in Setting (off by default), not the default behaviour.
 - Auto-start (Settings → General, #6) runs the next phase from the
   previous deadline, not from "now", so with it on the deadlines form a
   fixed rhythm. Idle skip reads the system idle time
-  (`CGEventSource`, no permission) only at a Focus phase end.
+  (`CGEventSource`, no permission) only at a Focus phase end. When it
+  skips a break, the next Focus waits for Play even with Auto-start: the
+  user is away, and Focus after Focus would run unattended.

@@ -90,8 +90,9 @@ sleep behaviour.
 What the timer does when the Mac goes to sleep, set by "When the Mac
 sleeps": Reset (a sleep reset, the default), Pause (a Running phase keeps
 its remaining time) or Keep counting (the deadline stands; phases that end
-while asleep are completed at wake with a single end-of-phase signal for
-the latest).
+while asleep, several only with Auto-start, are completed at wake with a
+single end-of-phase signal for the latest, and don't count towards the
+daily tally).
 
 **Auto-start**:
 An option under which the next phase starts Running at the previous phase's
@@ -100,8 +101,9 @@ _Avoid_: auto-advance, continuous mode
 
 **Idle skip**:
 At a Focus phase end, a break the user was already away for (no keyboard or
-mouse input for at least its length) counts as taken: Focus comes next.
-Set by "Skip break if idle"; checked only at that moment.
+mouse input for at least its length) counts as taken: Focus comes next,
+Ready even with Auto-start. Set by "Skip break if idle"; checked only at
+that moment.
 _Avoid_: away mode, auto-skip
 
 **Daily target**:
@@ -111,7 +113,8 @@ _Avoid_: goal, quota
 
 **Daily tally**:
 How many Focus intervals the user completed today (the n in "Today
-n/target"). It starts again at local midnight and survives quit and relaunch.
+n/target"), not counting any that ended while the Mac slept. It starts again
+at local midnight and survives quit and relaunch.
 _Avoid_: streak, score
 
 ## Signals

@@ -288,7 +288,7 @@ struct TimerModelSleepTests {
         harness.post(workspace: NSWorkspace.didWakeNotification)
         #expect(harness.signaler.completedPhases == [.focus])
         #expect(harness.model.state == .ready(.rest))
-        #expect(harness.model.todayCount == 1)
+        #expect(harness.model.todayCount == 0)
     }
 
     @Test func wakePastSeveralAutoStartedDeadlinesSignalsOnlyTheLatest() {
@@ -306,19 +306,25 @@ struct TimerModelSleepTests {
         ])
         #expect(harness.model.state == .running(.focus, endDate: t0 + 135 * 60))
         #expect(harness.model.clockText == "15:00")
-        #expect(harness.model.todayCount == 3)
+        #expect(harness.model.todayCount == 0)
     }
 
-    @Test func focusEndedWhileAsleepCountsForTheDayItEnded() {
+    @Test func focusEndedWhileAsleepDoesNotCountTowardsToday() async {
         let harness = TimerHarness()
         harness.model.setSleepBehaviour(.keepCounting)
         harness.model.play()
         harness.post(workspace: NSWorkspace.willSleepNotification)
 
-        // t0 is 13:46 UTC: Focus ends today, the Mac wakes tomorrow.
-        harness.clock.set(t0 + 11 * 3600)
+        // The tick task may run before the wake notification arrives.
+        await harness.clock.advance(by: 2 * 3600)
         harness.post(workspace: NSWorkspace.didWakeNotification)
         #expect(harness.signaler.completedPhases == [.focus])
         #expect(harness.model.todayCount == 0)
+
+        // Awake again: the next Focus counts.
+        harness.model.skip()
+        harness.model.play()
+        await harness.clock.advance(by: 1800)
+        #expect(harness.model.todayCount == 1)
     }
 }
