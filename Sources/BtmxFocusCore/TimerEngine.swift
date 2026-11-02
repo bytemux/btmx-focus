@@ -87,6 +87,17 @@ public struct PhaseEndOptions: Sendable, Equatable {
     }
 }
 
+/// What the timer does when the Mac goes to sleep, from Settings → General
+/// (ADR 0015). Stored by its raw value.
+public enum SleepBehaviour: String, CaseIterable, Sendable {
+    /// Sleep reset: back to Ready Focus, whatever the state.
+    case reset
+    /// A Running phase is paused with its remaining time.
+    case pause
+    /// The deadline stands; a phase may end while the Mac sleeps.
+    case keepCounting
+}
+
 public enum TimerEvent: Sendable, Equatable {
     case phaseCompleted(PhaseCompletion)
 }
@@ -99,6 +110,7 @@ public struct TimerEngine: Sendable, Equatable {
     /// deadline and a Paused one its remaining time.
     public var schedule: Schedule
     public var phaseEnd: PhaseEndOptions
+    public var sleepBehaviour = SleepBehaviour.reset
     /// Focus intervals since the cycle started (Reset or the last long break).
     public private(set) var focusIntervalsInCycle = 0
 
@@ -131,10 +143,20 @@ public struct TimerEngine: Sendable, Equatable {
         state = .ready(state.phase.next)
     }
 
-    /// Back to the start of a focus phase. Also used when the Mac goes to sleep.
+    /// Back to the start of a focus phase.
     public mutating func reset() {
         state = .ready(.focus)
         focusIntervalsInCycle = 0
+    }
+
+    /// The Mac is going to sleep: reset, pause, or nothing (keep counting),
+    /// per `sleepBehaviour`.
+    public mutating func systemWillSleep(now: Date) {
+        switch sleepBehaviour {
+        case .reset: reset()
+        case .pause: pause(now: now)
+        case .keepCounting: break
+        }
     }
 
     /// Completes the running phase once its deadline has passed. The next

@@ -128,6 +128,13 @@ app:
 3. Clicking elsewhere closes the popover; Settings' three tabs switch; ⌘W
    closes Settings and `⋯` → Settings… brings the same window back.
 4. Sleep the Mac (Apple menu → Sleep), wake it: Ready(Focus) `30:00`.
+   With Settings → General → "When the Mac sleeps" on Pause, a Running
+   phase wakes Paused at the time it had; on Keep counting it wakes still
+   Running, with the time asleep gone. Keep counting through a phase end
+   (E2E app with `--e2e-focus-seconds 60`, sleep for 2 minutes): one sound
+   and banner at wake, the next phase Ready; with Auto-start on and several
+   phase ends passed, still only one sound and banner, and the log shows a
+   `phase end:` line for each.
 5. The first ▶ asks for notification permission.
 6. Phase end: a notification banner, and the Glass sound (after focus) or
    Hero (after rest). To check this without waiting 30 minutes, launch the

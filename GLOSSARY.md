@@ -83,7 +83,15 @@ Returns to Ready Focus at full length.
 _Avoid_: stop, restart
 
 **Sleep reset**:
-The Reset the app performs when the Mac goes to sleep.
+The Reset the app performs when the Mac goes to sleep, under the default
+sleep behaviour.
+
+**Sleep behaviour**:
+What the timer does when the Mac goes to sleep, set by "When the Mac
+sleeps": Reset (a sleep reset, the default), Pause (a Running phase keeps
+its remaining time) or Keep counting (the deadline stands; phases that end
+while asleep are completed at wake with a single end-of-phase signal for
+the latest).
 
 **Auto-start**:
 An option under which the next phase starts Running at the previous phase's

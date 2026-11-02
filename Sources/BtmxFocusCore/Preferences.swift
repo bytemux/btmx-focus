@@ -30,6 +30,8 @@ public struct Preferences: Sendable, Equatable {
     /// No end-of-phase sound while Do Not Disturb or a Focus mode is on.
     public var silentDuringFocus = false
     public var appearance = Appearance.auto
+    /// What the timer does when the Mac goes to sleep (ADR 0015).
+    public var sleepBehaviour = SleepBehaviour.reset
 
     public init() {}
 }
@@ -81,6 +83,8 @@ public extension Preferences {
         volume = read("volume", standard.volume)
         silentDuringFocus = read("silentDuringFocus", standard.silentDuringFocus)
         appearance = Appearance(rawValue: read("appearance", standard.appearance.rawValue)) ?? standard.appearance
+        sleepBehaviour = SleepBehaviour(rawValue: read("sleepBehaviour", standard.sleepBehaviour.rawValue))
+            ?? standard.sleepBehaviour
     }
 
     /// Writes only the settings that differ from `old`, so settings the user

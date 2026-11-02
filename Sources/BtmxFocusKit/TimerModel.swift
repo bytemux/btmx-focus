@@ -27,7 +27,7 @@ public final class TimerModel {
     private var secondsVisible: Bool { !displayAsleep && !screenLocked }
 
     /// The notification centers default to the system ones: NSWorkspace's
-    /// (sleep, display), the distributed one (screen lock) and the default
+    /// (sleep, wake, display), the distributed one (screen lock) and the default
     /// one (system clock changes). The daily tally is kept in `defaults`.
     public init(
         engine: TimerEngine = TimerEngine(),
@@ -100,6 +100,12 @@ public final class TimerModel {
         apply(action) { engine, _ in engine.phaseEnd = options }
     }
 
+    /// What happens to the timer when the Mac sleeps, from Settings; applies at the next sleep.
+    public func setSleepBehaviour(_ behaviour: SleepBehaviour) {
+        guard behaviour != engine.sleepBehaviour else { return }
+        apply("sleep behaviour \(behaviour.rawValue)") { engine, _ in engine.sleepBehaviour = behaviour }
+    }
+
     /// Applies a user or system action and leaves a breadcrumb with the state change.
     private func apply(_ action: String, _ change: (inout TimerEngine, Date) -> Void) {
         let date = clock.now
@@ -116,25 +122,39 @@ public final class TimerModel {
         return "\(PhaseStyle.name(of: state.phase)) \(PhaseStyle.stateName(of: state)) \(time)"
     }
 
+    /// Completes every phase whose deadline has passed. Usually that is one,
+    /// but after a sleep with keep counting and auto-start (or a clock jump)
+    /// it can be several: each is logged and each Focus counts towards today,
+    /// but only the latest is signalled, so waking doesn't play a burst of
+    /// sounds (ADR 0015).
     private func tick() {
         let date = clock.now
         now = date
+        var latest: PhaseCompletion?
+        while case let .running(_, deadline) = engine.state, deadline <= date {
+            latest = completePhase(endingAt: deadline, now: date) ?? latest
+        }
+        if let latest {
+            signaler.phaseCompleted(latest)
+        }
+    }
+
+    private func completePhase(endingAt deadline: Date, now date: Date) -> PhaseCompletion? {
         // Idle time is read only if the engine asks (a Focus end with the option on).
         var idleTime = Duration.zero
         let event = engine.tick(now: date, idleTime: {
             idleTime = clock.idleTime
             return idleTime
         }())
-        if case let .phaseCompleted(completion) = event {
-            if completion.phase == .focus {
-                tally.recordFocusInterval(at: date, calendar: calendar)
-            }
-            let skipped = completion.skippedBreak.map { phase in
-                ", \(PhaseStyle.name(of: phase)) skipped (idle \(ClockFormat.string(for: idleTime)))"
-            } ?? ""
-            CrashLog.record("phase end: \(PhaseStyle.name(of: completion.phase))\(skipped) → \(describe(at: date))")
-            signaler.phaseCompleted(completion)
+        guard case let .phaseCompleted(completion) = event else { return nil }
+        if completion.phase == .focus {
+            tally.recordFocusInterval(at: deadline, calendar: calendar)
         }
+        let skipped = completion.skippedBreak.map { phase in
+            ", \(PhaseStyle.name(of: phase)) skipped (idle \(ClockFormat.string(for: idleTime)))"
+        } ?? ""
+        CrashLog.record("phase end: \(PhaseStyle.name(of: completion.phase))\(skipped) → \(describe(at: date))")
+        return completion
     }
 
     /// Wakes only when the displayed second changes (or only at the phase end
@@ -163,17 +183,24 @@ public final class TimerModel {
         observers.append(workspace.addObserver(
             forName: NSWorkspace.willSleepNotification, object: nil, queue: .main
         ) { [weak self] _ in
-            MainActor.assumeIsolated { self?.apply("system sleep, reset") { engine, _ in engine.reset() } }
+            MainActor.assumeIsolated {
+                guard let model = self else { return }
+                model.apply("system sleep, \(model.engine.sleepBehaviour.rawValue)") { $0.systemWillSleep(now: $1) }
+            }
         })
         observeVisibility(workspace, NSWorkspace.screensDidSleepNotification) { $0.displayAsleep = true }
         observeVisibility(workspace, NSWorkspace.screensDidWakeNotification) { $0.displayAsleep = false }
         observeVisibility(distributed, .init("com.apple.screenIsLocked")) { $0.screenLocked = true }
         observeVisibility(distributed, .init("com.apple.screenIsUnlocked")) { $0.screenLocked = false }
-        observers.append(local.addObserver(
-            forName: .NSSystemClockDidChange, object: nil, queue: .main
-        ) { [weak self] _ in
+        // A tick may not have run while asleep: catch up with the deadline (keep counting).
+        observeCatchUp(workspace, NSWorkspace.didWakeNotification, "system wake")
+        observeCatchUp(local, .NSSystemClockDidChange, "system clock changed")
+    }
+
+    private func observeCatchUp(_ center: NotificationCenter, _ name: Notification.Name, _ breadcrumb: String) {
+        observers.append(center.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
             MainActor.assumeIsolated {
-                CrashLog.record("system clock changed")
+                CrashLog.record(breadcrumb)
                 self?.tick()
                 self?.scheduleTicks()
             }

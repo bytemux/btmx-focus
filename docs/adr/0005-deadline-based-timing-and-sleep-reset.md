@@ -1,6 +1,6 @@
 # 0005. Deadline-based timing; reset on system sleep
 
-Status: Accepted
+Status: Accepted (sleep reset amended by 0015: now the default of a Setting)
 Date: 2026-11-02
 
 ## Context
@@ -32,5 +32,5 @@ Energy".
 
 - A late or missed tick never causes drift.
 - A Mac that sleeps through a phase doesn't come back to a stale or
-  finished timer, but the user loses the phase in progress. Configurable
-  sleep behaviour (reset / pause / keep counting) is a planned option.
+  finished timer, but the user loses the phase in progress. ADR 0015 makes
+  this the default of "When the Mac sleeps" (reset / pause / keep counting).
