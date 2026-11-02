@@ -1,5 +1,13 @@
 import Foundation
 
+/// Whether the popover and the Settings window follow the system's light or
+/// dark appearance (`auto`) or force one.
+public enum Appearance: String, CaseIterable, Sendable {
+    case auto
+    case light
+    case dark
+}
+
 /// Every user setting with its default. Lengths are in minutes; an empty
 /// sound name means no sound.
 public struct Preferences: Sendable, Equatable {
@@ -19,6 +27,7 @@ public struct Preferences: Sendable, Equatable {
     public var breakEndSound = "Hero"
     /// `NSSound.volume`, 0...1.
     public var volume = 1.0
+    public var appearance = Appearance.auto
 
     public init() {}
 }
@@ -44,6 +53,7 @@ public extension Preferences {
         focusEndSound = read("focusEndSound", standard.focusEndSound)
         breakEndSound = read("breakEndSound", standard.breakEndSound)
         volume = read("volume", standard.volume)
+        appearance = Appearance(rawValue: read("appearance", standard.appearance.rawValue)) ?? standard.appearance
     }
 
     /// Writes only the settings that differ from `old`, so settings the user
@@ -74,8 +84,13 @@ public extension Preferences {
         }
     }
 
-    /// Each setting as (property name, value), in declaration order.
+    /// Each setting as (property name, value), in declaration order. Enums
+    /// appear as their raw value, which is what `UserDefaults` stores.
     private var settings: [(String, Any)] {
-        Mirror(reflecting: self).children.compactMap { child in child.label.map { ($0, child.value) } }
+        Mirror(reflecting: self).children.compactMap { child in
+            child.label.map { label in
+                (label, (child.value as? any RawRepresentable)?.rawValue ?? child.value)
+            }
+        }
     }
 }

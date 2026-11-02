@@ -26,5 +26,6 @@ public enum AccessibilityID {
         public static let showTimerInMenuBar = "btmx.settings.showTimerInMenuBar"
         public static let launchAtLogin = "btmx.settings.launchAtLogin"
         public static let openLoginItems = "btmx.settings.openLoginItems"
+        public static let appearance = "btmx.settings.appearance"
     }
 }
