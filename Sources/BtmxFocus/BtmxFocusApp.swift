@@ -60,7 +60,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let settings = SettingsStore()
         let model = TimerModel(
             engine: TimerEngine(schedule: schedule(from: settings)),
-            signaler: PhaseSignaler(notificationsEnabled: e2e?.notificationsEnabled ?? true)
+            signaler: PhaseSignaler(settings: settings, notificationsEnabled: e2e?.notificationsEnabled ?? true)
         )
         pushSchedule(from: settings, to: model)
         statusItemController = StatusItemController(

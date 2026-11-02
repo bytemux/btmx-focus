@@ -16,17 +16,39 @@ public struct PopoverView: View {
         self.close = close
     }
 
+    /// The phase colour (red Focus, green Rest), gray while Paused.
+    private var ringColor: Color {
+        switch model.state {
+        case .paused: .secondary
+        case .ready(.focus), .running(.focus, _): .red
+        case .ready(.rest), .running(.rest, _), .ready(.longRest), .running(.longRest, _): .green
+        }
+    }
+
     public var body: some View {
         VStack(spacing: 12) {
-            Text(PhaseStyle.name(of: model.state.phase))
-                .font(.title3)
-                .foregroundStyle(.secondary)
-                .accessibilityIdentifier(AccessibilityID.Popover.phase)
+            ZStack {
+                ProgressRing(progress: model.progress, color: ringColor)
+                VStack(spacing: 2) {
+                    Text(PhaseStyle.name(of: model.state.phase))
+                        .font(.title3)
+                        .foregroundStyle(.secondary)
+                        .accessibilityIdentifier(AccessibilityID.Popover.phase)
 
-            Text(model.clockText)
-                .font(.system(size: 56, weight: .light, design: .rounded).monospacedDigit())
-                .accessibilityLabel(PhaseStyle.accessibilityLabel(state: model.state, remaining: model.remaining))
-                .accessibilityIdentifier(AccessibilityID.Popover.clock)
+                    Text(model.clockText)
+                        .font(.system(size: 48, weight: .light, design: .rounded).monospacedDigit())
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.5)
+                        .frame(maxWidth: 150)
+                        .accessibilityLabel(
+                            PhaseStyle.accessibilityLabel(state: model.state, remaining: model.remaining)
+                        )
+                        .accessibilityIdentifier(AccessibilityID.Popover.clock)
+                }
+                // Optical centre: the phase name sits above the clock.
+                .offset(y: -6)
+            }
+            .frame(width: 180, height: 180)
 
             Button(action: model.togglePlayPause) {
                 Image(systemName: model.isRunning ? "pause.fill" : "play.fill")

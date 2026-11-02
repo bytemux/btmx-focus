@@ -54,6 +54,12 @@ _Avoid_: end time, alarm time
 **Remaining time**:
 How long is left of the current phase, shown rounded up to the whole second.
 
+**Progress ring**:
+A circle that empties clockwise from 12 o'clock as the remaining time runs
+down: around the clock in the popover, and as the menu-bar icon while Running.
+Purely visual; it can't be dragged.
+_Avoid_: progress bar, dial
+
 **Phase end**:
 The moment a Running phase reaches its deadline; the next phase becomes Ready.
 _Avoid_: timeout, completion
@@ -116,6 +122,12 @@ _Avoid_: overflow menu, gear menu
 **Settings window**:
 Where the user changes the schedule, signals and other options.
 _Avoid_: preferences
+
+**Appearance**:
+Whether the popover and the Settings window follow the system's light or
+dark mode (Auto, the default) or are forced Light or Dark. The menu-bar item
+always follows the menu bar.
+_Avoid_: theme, dark mode (for the setting)
 
 **Focus mode**:
 The macOS system feature that silences notifications. Not part of this app,

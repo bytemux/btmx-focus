@@ -45,7 +45,8 @@ drive it like the system would, with no waiting:
 - `PopoverView` in Ready(Focus), Running(Focus), Paused, Ready(Rest), Ready(Long break)
 - each Settings tab's content (`SettingsTabContent`), without the tab bar:
   offscreen rendering can't draw its selected segment
-- the status-item button, Ready and Running
+- the status-item button, Ready and Running (Focus, Rest): the progress
+  ring icon
 
 Each at a fixed size, on a fixed clock and with private `UserDefaults`.
 

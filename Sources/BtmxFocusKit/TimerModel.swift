@@ -41,6 +41,8 @@ public final class TimerModel {
     public var state: TimerState { engine.state }
     public var remaining: Duration { engine.remaining(at: now) }
     public var clockText: String { ClockFormat.string(for: remaining) }
+    /// Elapsed fraction of the phase, for the progress ring.
+    public var progress: Double { engine.progress(at: now) }
     public var isRunning: Bool { if case .running = state { true } else { false } }
     /// Nothing to reset back to at the start of a focus phase.
     public var canReset: Bool { state != .ready(.focus) }
