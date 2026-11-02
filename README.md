@@ -1,10 +1,10 @@
-<img src="docs/images/icon.png" alt="The btmx-focus icon: a long italic ƒ over a red progress ring" width="128">
-
-# btmx-focus
+# btmx-focus <img src="docs/images/icon.png" alt="The btmx-focus icon: a long italic ƒ over a red progress ring" height="40" align="top">
 
 A native macOS menu-bar focus timer: 30 minutes of focus, 5 minutes of rest, one click away.
 
-<img src="docs/images/popover.png" alt="The btmx-focus popover: a progress ring around Focus, 24:13 and the pause button, with Today 0/10 below" width="240">
+<p align="center">
+  <img src="docs/images/popover.png" alt="The btmx-focus popover: a progress ring around Focus, 24:13 and the pause button, with Today 0/10 below" width="240">
+</p>
 
 ## Install
 
