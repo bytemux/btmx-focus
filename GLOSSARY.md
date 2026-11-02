@@ -56,7 +56,8 @@ How long is left of the current phase, shown rounded up to the whole second.
 
 **Progress ring**:
 A circle that empties clockwise from 12 o'clock as the remaining time runs
-down: around the clock in the popover, and as the menu-bar icon while Running.
+down: behind the phase name, clock and Play/Pause in the popover, and as the
+menu-bar icon while Running.
 Purely visual; it can't be dragged.
 _Avoid_: progress bar, dial
 
