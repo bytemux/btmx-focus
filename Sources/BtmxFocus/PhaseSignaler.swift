@@ -8,14 +8,17 @@ import UserNotifications
 @MainActor
 final class PhaseSignaler: PhaseSignalSink {
     private let notificationDelegate = ForegroundNotificationDelegate()
+    private let notificationsEnabled: Bool
     private var requestedAuthorization = false
 
     /// `UNUserNotificationCenter` traps outside an app bundle (e.g. `swift run`).
     private var notificationCenter: UNUserNotificationCenter? {
-        Bundle.main.bundleIdentifier == nil ? nil : .current()
+        !notificationsEnabled || Bundle.main.bundleIdentifier == nil ? nil : .current()
     }
 
-    init() {
+    /// `notificationsEnabled: false` (E2E build) means sound only and no permission prompt.
+    init(notificationsEnabled: Bool = true) {
+        self.notificationsEnabled = notificationsEnabled
         notificationCenter?.delegate = notificationDelegate
     }
 
@@ -36,8 +39,10 @@ final class PhaseSignaler: PhaseSignalSink {
     }
 
     func phaseCompleted(_ phase: Phase) {
-        NSSound(named: soundName(after: phase))?.play()
+        let sound = soundName(after: phase)
+        NSSound(named: sound)?.play()
         postNotification(after: phase)
+        CrashLog.record("signal: \(sound) sound\(notificationCenter == nil ? "" : " + notification")")
     }
 
     private func soundName(after phase: Phase) -> NSSound.Name {

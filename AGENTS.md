@@ -10,6 +10,7 @@ Run `swift test` after every change.
 ```sh
 swift test                                   # unit + snapshot tests
 SNAPSHOT_RECORD=1 swift test                 # re-record snapshots
+scripts/e2e.sh                               # E2E: drives the real app (takes the mouse)
 scripts/build-app.sh && open build/btmx-focus.app
 swiftformat . && swiftlint
 ```
@@ -20,10 +21,13 @@ and tell the user; don't work around it.
 
 ## Testing the UI
 
-Do not use computer use, screenshots or screen recording. Verify what you
-can with `swift test` (including the snapshot tests), a clean build and the
-logs (`crash-*.log`, and `breadcrumbs.log` with Debug Logging on). Then hand
-over to the user, who tests the UI by hand, and say what to look for.
+`swift test` always. After UI changes (status item, popover, menus,
+Settings, focus) also run `scripts/e2e.sh`, but warn the user first: it
+takes over the mouse and keyboard for about a minute. Then review the
+screenshots it saves (`build/e2e/<timestamp>/`). To explore the running UI,
+use `swift run focus-drive` (`tree`, `click`, `key`, `shot`), not computer
+use. See `docs/testing.md`. Only real sleep, the notification banner and
+prompt, and the sounds still need the user (`docs/building.md`).
 
 ## Agent skills
 

@@ -1,3 +1,4 @@
+import BtmxFocusUIContract
 import SwiftUI
 
 public enum SettingsTab: CaseIterable, Sendable {
@@ -44,6 +45,7 @@ public struct SettingsTabContent: View {
             switch tab {
             case .general:
                 Toggle("Show timer in menu bar", isOn: $settings.preferences.showTimerInMenuBar)
+                    .accessibilityIdentifier(AccessibilityID.Settings.showTimerInMenuBar)
             case .intervals, .notificationsAndSounds:
                 EmptyView()
             }

@@ -16,7 +16,7 @@ SNAPSHOT_RECORD=1 swift test                 # re-record every snapshot
 | `BtmxFocusCore` | `BtmxFocusCoreTests` | `TimerEngine`, `Preferences`, `ClockFormat`: pure values |
 | `BtmxFocusKit` | `BtmxFocusKitTests` | `TimerModel`, `SettingsStore`, `StatusItemPresentation` in-process |
 | `BtmxFocusKit` | `BtmxFocusSnapshotTests` | the rendered `PopoverView`, `SettingsView` and status-item button |
-| `BtmxFocus` | none | `AppDelegate`, `StatusItemController`, `SettingsWindowController`, `PhaseSignaler`: thin AppKit wiring, tested by hand |
+| `BtmxFocus` | `BtmxFocusE2ETests` (only with `E2E=1`) | the bundled E2E app from outside: what a user sees, plus breadcrumbs |
 
 Tests check behaviour through the public interface only, never private state.
 
@@ -80,8 +80,77 @@ swift test && swiftformat --lint . && swiftlint
 Tests need Xcode (ADR 0009): swift-snapshot-testing builds on XCTest, which
 only Xcode ships.
 
+## E2E tests
+
+`scripts/e2e.sh` builds `build/btmx-focus E2E.app`
+(`scripts/build-app.sh e2e`), counts down 3 s and runs `BtmxFocusE2ETests`.
+The suite launches the real app and clicks through it like a user (ADR 0010).
+**It takes over the mouse and keyboard for about a minute; don't touch
+them.** Extra arguments go to `swift test`:
+
+```sh
+scripts/e2e.sh                              # whole suite
+scripts/e2e.sh --filter SettingsFlows       # one suite
+```
+
+What it covers: status item → popover (Ready, Running with time + red icon,
+Paused gray + frozen, resume), Skip, Reset, a 3 s/2 s phase end (next phase
+waits, signal breadcrumb), simulated sleep, click outside, clicking the item
+while open, Space, Esc (closes and hands back the keyboard), `⋯` → Quit,
+`⋯` → Settings…, its three tabs, "Show timer in menu bar" off (icon only,
+still off after relaunch), ⌘W and reopening the same window.
+
+### Permissions
+
+The driver needs, for the app you run it from (Terminal, iTerm, your
+editor), in System Settings → Privacy & Security:
+
+- **Accessibility**: to read the app's controls and send clicks and keys.
+- **Screen & System Audio Recording**: for screenshots and window titles.
+
+It checks both before launching and fails naming the app to allow; it
+never triggers a prompt. After granting, restart that app.
+
+The status item must be visible: if the menu bar is full (or the item is
+behind the notch), the test fails saying so; quit some menu-bar apps.
+
+### How it works
+
+- **E2E build**: bundle id `com.btmx.focus.e2e`, so it runs next to your
+  real btmx-focus with its own settings and logs. Only this debug build
+  accepts the launch arguments in `E2EContract` (`--e2e-focus-seconds`,
+  `--e2e-rest-seconds`, `--e2e-no-notifications`, `--e2e-debug-logging`,
+  `--e2e-reset-settings`) and the simulated-sleep notification. Every test
+  starts a fresh app with its settings wiped.
+- **Driver** (`Sources/BtmxFocusDriver/`): finds elements by accessibility
+  identifier (`AccessibilityID` in `BtmxFocusUIContract`, set by the app),
+  clicks with real `CGEvent`s at their centre once they've stopped moving
+  and are what's under the pointer, and puts the pointer back. Waits poll
+  every 50 ms, 2 s by default. Breadcrumbs are read live from the unified
+  log, not from the sandboxed `breadcrumbs.log`.
+- **Artefacts** in `build/e2e/<timestamp>/` (gitignored, path printed at
+  the end): a numbered screenshot per checkpoint (status item + popover +
+  open menu, and the Settings window), and for each failure a full-screen
+  screenshot plus `…-FAILED.txt` with the error, the AX tree and the
+  breadcrumbs. Look at the screenshots after UI changes.
+
+### Exploring with `focus-drive`
+
+The same driver as a CLI, for poking at the running E2E app by hand or from
+an agent:
+
+```sh
+scripts/build-app.sh e2e
+swift run focus-drive launch --e2e-reset-settings --e2e-focus-seconds 5
+swift run focus-drive tree                    # AX tree with identifiers
+swift run focus-drive click statusItem        # or any identifier, or `outside`
+swift run focus-drive click btmx.popover.playPause
+swift run focus-drive key space               # space, escape, cmd+w, …
+swift run focus-drive shot running            # prints the screenshot path
+swift run focus-drive quit
+```
+
 ## By hand
 
-The tests don't open the app. For changes to the wiring (status item,
-popover anchoring, Settings window, notifications, sounds), build and run it
-(`docs/building.md`) and go through the manual check there.
+What the E2E suite can't drive (real sleep, the notification prompt and
+banner, sounds) is in the manual check in `docs/building.md`.
