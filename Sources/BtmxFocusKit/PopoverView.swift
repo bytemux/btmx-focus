@@ -5,13 +5,18 @@ import SwiftUI
 
 public struct PopoverView: View {
     let model: TimerModel
+    /// Settings → Intervals → Target per day, for "Today n/target".
+    let dailyTarget: Int
     let openSettings: () -> Void
     /// Esc: closes the popover and hands the keyboard back.
     let close: () -> Void
     @AppStorage(CrashLog.debugLoggingKey) private var debugLogging = false
 
-    public init(model: TimerModel, openSettings: @escaping () -> Void, close: @escaping () -> Void = {}) {
+    public init(
+        model: TimerModel, dailyTarget: Int, openSettings: @escaping () -> Void, close: @escaping () -> Void = {}
+    ) {
         self.model = model
+        self.dailyTarget = dailyTarget
         self.openSettings = openSettings
         self.close = close
     }
@@ -57,6 +62,11 @@ public struct PopoverView: View {
             }
             .frame(width: 200, height: 200)
             .background(ProgressRing(progress: model.progress, color: ringColor))
+
+            Text("Today \(model.todayCount)/\(dailyTarget)")
+                .font(.callout.monospacedDigit())
+                .foregroundStyle(.secondary)
+                .accessibilityIdentifier(AccessibilityID.Popover.today)
 
             Divider()
 

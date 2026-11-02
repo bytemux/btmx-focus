@@ -67,6 +67,7 @@ final class StatusItemController: NSObject {
         popover.contentViewController = NSHostingController(
             rootView: PopoverView(
                 model: model,
+                dailyTarget: settings.preferences.dailyTarget,
                 openSettings: { [weak self] in self?.openSettings() },
                 close: { [weak self] in self?.popover.performClose(nil) }
             )

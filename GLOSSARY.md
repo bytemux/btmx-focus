@@ -95,6 +95,11 @@ The number of Focus intervals the user aims for in a day, shown as
 "Today n/target".
 _Avoid_: goal, quota
 
+**Daily tally**:
+How many Focus intervals the user completed today (the n in "Today
+n/target"). It starts again at local midnight and survives quit and relaunch.
+_Avoid_: streak, score
+
 ## Signals
 
 **End-of-phase signal**:
