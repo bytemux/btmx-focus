@@ -32,44 +32,41 @@ public struct PopoverView: View {
 
     public var body: some View {
         VStack(spacing: 12) {
-            ZStack {
-                ProgressRing(progress: model.progress, color: ringColor)
-                VStack(spacing: 2) {
-                    Text(PhaseStyle.name(of: model.state.phase))
-                        .font(.title3)
-                        .foregroundStyle(.secondary)
-                        .accessibilityIdentifier(AccessibilityID.Popover.phase)
+            // The phase name, clock and Play/Pause sit together inside the ring.
+            VStack(spacing: 0) {
+                Text(PhaseStyle.name(of: model.state.phase))
+                    .font(.title3)
+                    .foregroundStyle(.secondary)
+                    .accessibilityIdentifier(AccessibilityID.Popover.phase)
 
-                    Text(model.clockText)
-                        .font(.system(size: 48, weight: .light, design: .rounded).monospacedDigit())
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.5)
-                        .frame(maxWidth: 150)
-                        .accessibilityLabel(
-                            PhaseStyle.accessibilityLabel(state: model.state, remaining: model.remaining)
-                        )
-                        .accessibilityIdentifier(AccessibilityID.Popover.clock)
+                Text(model.clockText)
+                    .font(.system(size: 38, weight: .light, design: .rounded).monospacedDigit())
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.5)
+                    .frame(maxWidth: 140)
+                    .accessibilityLabel(
+                        PhaseStyle.accessibilityLabel(state: model.state, remaining: model.remaining)
+                    )
+                    .accessibilityIdentifier(AccessibilityID.Popover.clock)
+
+                Button(action: model.togglePlayPause) {
+                    Image(systemName: model.isRunning ? "pause.fill" : "play.fill")
+                        .font(.system(size: 24))
+                        .frame(width: 56, height: 40)
+                        .contentShape(Rectangle())
                 }
-                // Optical centre: the phase name sits above the clock.
-                .offset(y: -6)
+                .buttonStyle(.plain)
+                .keyboardShortcut(.defaultAction)
+                .accessibilityLabel(model.isRunning ? Text("Pause") : Text("Play"))
+                .accessibilityIdentifier(AccessibilityID.Popover.playPause)
             }
-            .frame(width: 180, height: 180)
+            .frame(width: 200, height: 200)
+            .background(ProgressRing(progress: model.progress, color: ringColor))
 
             Text("Today \(model.todayCount)/\(dailyTarget)")
                 .font(.callout.monospacedDigit())
                 .foregroundStyle(.secondary)
                 .accessibilityIdentifier(AccessibilityID.Popover.today)
-
-            Button(action: model.togglePlayPause) {
-                Image(systemName: model.isRunning ? "pause.fill" : "play.fill")
-                    .font(.system(size: 28))
-                    .frame(width: 56, height: 44)
-                    .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .keyboardShortcut(.defaultAction)
-            .accessibilityLabel(model.isRunning ? Text("Pause") : Text("Play"))
-            .accessibilityIdentifier(AccessibilityID.Popover.playPause)
 
             Divider()
 

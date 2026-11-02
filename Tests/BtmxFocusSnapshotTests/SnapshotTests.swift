@@ -25,7 +25,7 @@ struct SnapshotTests {
         // the test process's real defaults.
         let view = PopoverView(model: harness.model, dailyTarget: 10, openSettings: {})
             .defaultAppStorage(freshDefaults().defaults)
-        assertSnapshot(of: view, size: CGSize(width: 240, height: 340), named: state.rawValue)
+        assertSnapshot(of: view, size: CGSize(width: 240, height: 308), named: state.rawValue)
     }
 
     /// Each tab's content without the tab bar, which offscreen rendering
