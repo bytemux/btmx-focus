@@ -1,3 +1,4 @@
+import BtmxFocusCore
 import BtmxFocusUIContract
 import SwiftUI
 
@@ -51,11 +52,113 @@ public struct SettingsTabContent: View {
                 Toggle("Show timer in menu bar", isOn: $settings.preferences.showTimerInMenuBar)
                     .accessibilityIdentifier(AccessibilityID.Settings.showTimerInMenuBar)
                 launchAtLoginToggle
-            case .intervals, .notificationsAndSounds:
-                EmptyView()
+                Toggle("Auto-start timer", isOn: $settings.preferences.autoStart)
+                    .accessibilityIdentifier(AccessibilityID.Settings.autoStart)
+                Toggle("Skip break if idle", isOn: $settings.preferences.skipBreakIfIdle)
+                    .accessibilityIdentifier(AccessibilityID.Settings.skipBreakIfIdle)
+                Picker("When the Mac sleeps", selection: $settings.preferences.sleepBehaviour) {
+                    Text("Reset").tag(SleepBehaviour.reset)
+                    Text("Pause").tag(SleepBehaviour.pause)
+                    Text("Keep counting").tag(SleepBehaviour.keepCounting)
+                }
+                .accessibilityIdentifier(AccessibilityID.Settings.sleepBehaviour)
+                Picker("Appearance", selection: $settings.preferences.appearance) {
+                    Text("Auto").tag(Appearance.auto)
+                    Text("Light").tag(Appearance.light)
+                    Text("Dark").tag(Appearance.dark)
+                }
+                .accessibilityIdentifier(AccessibilityID.Settings.appearance)
+            case .intervals:
+                intervalPicker(
+                    "Focus duration",
+                    $settings.preferences.focusMinutes,
+                    Preferences.focusMinuteOptions,
+                    label: Self.minutes
+                )
+                intervalPicker(
+                    "Short break duration",
+                    $settings.preferences.shortRestMinutes,
+                    Preferences.shortRestMinuteOptions,
+                    label: Self.minutes
+                )
+                intervalPicker(
+                    "Long break duration",
+                    $settings.preferences.longRestMinutes,
+                    Preferences.longRestMinuteOptions,
+                    label: Self.minutes
+                )
+                intervalPicker(
+                    "Long break after",
+                    $settings.preferences.longRestEvery,
+                    Preferences.longRestEveryOptions,
+                    label: Self.intervals
+                )
+                intervalPicker(
+                    "Target per day",
+                    $settings.preferences.dailyTarget,
+                    Preferences.dailyTargetOptions,
+                    label: Self.intervals
+                )
+                .accessibilityIdentifier(AccessibilityID.Settings.dailyTarget)
+            case .notificationsAndSounds:
+                notificationsAndSounds
             }
         }
         .formStyle(.grouped)
+    }
+
+    /// A pop-up of preset values; a stored value that isn't a preset is listed too.
+    private func intervalPicker(
+        _ title: LocalizedStringKey, _ value: Binding<Int>, _ presets: [Int], label: @escaping (Int) -> String
+    ) -> some View {
+        Picker(title, selection: value) {
+            ForEach(Set(presets + [value.wrappedValue]).sorted(), id: \.self) { option in
+                Text(label(option)).tag(option)
+            }
+        }
+    }
+
+    private static func minutes(_ count: Int) -> String {
+        count == 1 ? String(localized: "1 minute") : String(localized: "\(count) minutes")
+    }
+
+    private static func intervals(_ count: Int) -> String {
+        count == 1 ? String(localized: "1 interval") : String(localized: "\(count) intervals")
+    }
+
+    @ViewBuilder private var notificationsAndSounds: some View {
+        endSoundPicker("Work completed sound", after: .focus, identifier: AccessibilityID.Settings.focusEndSound)
+        endSoundPicker("End break sound", after: .rest, identifier: AccessibilityID.Settings.breakEndSound)
+        Slider(value: $settings.preferences.volume, in: 0 ... 1) {
+            Text("Notification sound level")
+        } minimumValueLabel: {
+            Image(systemName: "speaker.fill")
+        } maximumValueLabel: {
+            Image(systemName: "speaker.wave.3.fill")
+        } onEditingChanged: { editing in
+            if !editing {
+                settings.volumeSliderReleased()
+            }
+        }
+        .accessibilityIdentifier(AccessibilityID.Settings.volume)
+        if settings.canSilenceDuringFocus {
+            Toggle("Silent during Do Not Disturb and Focus", isOn: $settings.preferences.silentDuringFocus)
+                .accessibilityIdentifier(AccessibilityID.Settings.silentDuringFocus)
+        }
+        Toggle("Completion notifications", isOn: $settings.preferences.completionNotifications)
+            .accessibilityIdentifier(AccessibilityID.Settings.completionNotifications)
+    }
+
+    private func endSoundPicker(_ title: LocalizedStringKey, after phase: Phase, identifier: String) -> some View {
+        Picker(title, selection: Binding(
+            get: { settings.preferences.endSound(after: phase) ?? "" },
+            set: { settings.pickEndSound($0, after: phase) }
+        )) {
+            Text("None").tag("")
+            Divider()
+            ForEach(SystemSound.names, id: \.self) { Text($0).tag($0) }
+        }
+        .accessibilityIdentifier(identifier)
     }
 
     private var launchAtLoginToggle: some View {

@@ -54,6 +54,13 @@ _Avoid_: end time, alarm time
 **Remaining time**:
 How long is left of the current phase, shown rounded up to the whole second.
 
+**Progress ring**:
+A circle that empties clockwise from 12 o'clock as the remaining time runs
+down: behind the phase name, clock and Play/Pause in the popover, and as the
+menu-bar icon while Running.
+Purely visual; it can't be dragged.
+_Avoid_: progress bar, dial
+
 **Phase end**:
 The moment a Running phase reaches its deadline; the next phase becomes Ready.
 _Avoid_: timeout, completion
@@ -76,17 +83,39 @@ Returns to Ready Focus at full length.
 _Avoid_: stop, restart
 
 **Sleep reset**:
-The Reset the app performs when the Mac goes to sleep.
+The Reset the app performs when the Mac goes to sleep, under the default
+sleep behaviour.
+
+**Sleep behaviour**:
+What the timer does when the Mac goes to sleep, set by "When the Mac
+sleeps": Reset (a sleep reset, the default), Pause (a Running phase keeps
+its remaining time) or Keep counting (the deadline stands; a phase that
+ends while asleep is completed at wake as one the user was away for: the
+sleep counts as idle, the next phase waits for Play even with Auto-start,
+and a Focus doesn't count towards the daily tally).
 
 **Auto-start**:
 An option under which the next phase starts Running at the previous phase's
 deadline instead of waiting for Play.
 _Avoid_: auto-advance, continuous mode
 
+**Idle skip**:
+At a Focus phase end, a break the user was already away for (no keyboard or
+mouse input for at least its length) counts as taken: Focus comes next,
+Ready even with Auto-start. Set by "Skip break if idle"; checked only at
+that moment.
+_Avoid_: away mode, auto-skip
+
 **Daily target**:
 The number of Focus intervals the user aims for in a day, shown as
 "Today n/target".
 _Avoid_: goal, quota
+
+**Daily tally**:
+How many Focus intervals the user completed today (the n in "Today
+n/target"), not counting any that ended while the Mac slept. It starts again
+at local midnight and survives quit and relaunch.
+_Avoid_: streak, score
 
 ## Signals
 
@@ -94,6 +123,13 @@ _Avoid_: goal, quota
 What tells the user a phase ended: the icon change, a notification and a
 sound. Skip and Reset never give one.
 _Avoid_: alarm, alert, chime
+
+**Silent during Focus**:
+The option (off by default) that drops the sound from the end-of-phase
+signal while Do Not Disturb or another Focus mode is on. If the app can't
+tell (no permission), the sound plays. Shown only in builds that can read
+the Focus status.
+_Avoid_: mute, quiet hours
 
 ## Interface
 
@@ -116,6 +152,12 @@ _Avoid_: overflow menu, gear menu
 **Settings window**:
 Where the user changes the schedule, signals and other options.
 _Avoid_: preferences
+
+**Appearance**:
+Whether the popover and the Settings window follow the system's light or
+dark mode (Auto, the default) or are forced Light or Dark. The menu-bar item
+always follows the menu bar.
+_Avoid_: theme, dark mode (for the setting)
 
 **Focus mode**:
 The macOS system feature that silences notifications. Not part of this app,

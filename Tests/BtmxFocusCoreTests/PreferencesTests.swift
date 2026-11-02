@@ -18,6 +18,82 @@ struct PreferencesTests {
         #expect(preferences.focusEndSound == "Glass")
         #expect(preferences.breakEndSound == "Hero")
         #expect(preferences.volume == 1.0)
+        #expect(preferences.silentDuringFocus == false)
+        #expect(preferences.appearance == .auto)
+        #expect(preferences.sleepBehaviour == .reset)
+    }
+
+    @Test func focusAndBreakEndWithDifferentSoundsByDefault() {
+        let preferences = Preferences()
+        #expect(preferences.endSound(after: .focus) == "Glass")
+        #expect(preferences.endSound(after: .rest) == "Hero")
+        #expect(preferences.endSound(after: .longRest) == "Hero")
+    }
+
+    @Test func soundNoneMeansNoEndSound() {
+        var preferences = Preferences()
+        preferences.focusEndSound = ""
+        preferences.breakEndSound = "Ping"
+        #expect(preferences.endSound(after: .focus) == nil)
+        #expect(preferences.endSound(after: .rest) == "Ping")
+    }
+
+    @Test func silentDuringFocusMutesTheEndSoundOnlyWhileAFocusIsOn() {
+        var preferences = Preferences()
+        preferences.silentDuringFocus = true
+        #expect(preferences.endSound(after: .focus, focusActive: true) == nil)
+        #expect(preferences.endSound(after: .rest, focusActive: true) == nil)
+        #expect(preferences.endSound(after: .focus, focusActive: false) == "Glass")
+    }
+
+    /// The end of a phase must be noticed (ADR 0007): when the Focus status
+    /// can't be read (no permission), the sound plays.
+    @Test func unknownFocusStatusPlaysTheEndSound() {
+        var preferences = Preferences()
+        preferences.silentDuringFocus = true
+        #expect(preferences.endSound(after: .rest, focusActive: nil) == "Hero")
+    }
+
+    @Test func endSoundIgnoresFocusWhileTheOptionIsOff() {
+        #expect(Preferences().endSound(after: .focus, focusActive: true) == "Glass")
+    }
+
+    @Test func soundPickerListsTheBuiltInSounds() {
+        #expect(SystemSound.names == [
+            "Basso", "Blow", "Bottle", "Frog", "Funk", "Glass", "Hero",
+            "Morse", "Ping", "Pop", "Purr", "Sosumi", "Submarine", "Tink",
+        ])
+    }
+
+    @Test func intervalPresetsIncludeTheDefaults() {
+        let preferences = Preferences()
+        #expect(Preferences.focusMinuteOptions.contains(preferences.focusMinutes))
+        #expect(Preferences.shortRestMinuteOptions.contains(preferences.shortRestMinutes))
+        #expect(Preferences.longRestMinuteOptions.contains(preferences.longRestMinutes))
+        #expect(Preferences.longRestEveryOptions.contains(preferences.longRestEvery))
+        // The manual check: Focus 1 min, long break after 2.
+        #expect(Preferences.focusMinuteOptions.contains(1))
+        #expect(Preferences.longRestEveryOptions.contains(2))
+    }
+
+    @Test func scheduleFollowsTheIntervalSettings() {
+        var preferences = Preferences()
+        #expect(preferences.schedule == .standard)
+        preferences.focusMinutes = 50
+        preferences.shortRestMinutes = 10
+        preferences.longRestMinutes = 20
+        preferences.longRestEvery = 2
+        #expect(preferences.schedule == Schedule(
+            focus: .seconds(3000), rest: .seconds(600), longRest: .seconds(1200), longRestEvery: 2
+        ))
+    }
+
+    @Test func phaseEndOptionsFollowTheGeneralSettings() {
+        var preferences = Preferences()
+        #expect(preferences.phaseEnd == PhaseEndOptions(autoStart: false, skipBreakIfIdle: true))
+        preferences.autoStart = true
+        preferences.skipBreakIfIdle = false
+        #expect(preferences.phaseEnd == PhaseEndOptions(autoStart: true, skipBreakIfIdle: false))
     }
 
     @Test func emptyDefaultsLoadTheDefaults() {
@@ -40,6 +116,9 @@ struct PreferencesTests {
         preferences.focusEndSound = ""
         preferences.breakEndSound = "Ping"
         preferences.volume = 0.25
+        preferences.silentDuringFocus = true
+        preferences.appearance = .dark
+        preferences.sleepBehaviour = .keepCounting
         preferences.save(to: defaults, changedFrom: Preferences())
 
         #expect(Preferences(defaults: defaults) == preferences)
@@ -59,6 +138,32 @@ struct PreferencesTests {
         let defaults = freshDefaults()
         defaults.set("loud", forKey: "volume")
         #expect(Preferences(defaults: defaults).volume == 1.0)
+    }
+
+    @Test func appearanceIsSavedByName() {
+        let defaults = freshDefaults()
+        var preferences = Preferences()
+        preferences.appearance = .light
+        preferences.save(to: defaults, changedFrom: Preferences())
+        #expect(defaults.string(forKey: "appearance") == "light")
+        #expect(preferences.changes(from: Preferences()) == ["appearance auto → light"])
+    }
+
+    @Test func unknownAppearanceFallsBackToAuto() {
+        let defaults = freshDefaults()
+        defaults.set("sepia", forKey: "appearance")
+        #expect(Preferences(defaults: defaults).appearance == .auto)
+    }
+
+    @Test func sleepBehaviourIsSavedByNameAndUnknownNamesFallBackToReset() {
+        let defaults = freshDefaults()
+        var preferences = Preferences()
+        preferences.sleepBehaviour = .pause
+        preferences.save(to: defaults, changedFrom: Preferences())
+        #expect(defaults.string(forKey: "sleepBehaviour") == "pause")
+
+        defaults.set("hibernate", forKey: "sleepBehaviour")
+        #expect(Preferences(defaults: defaults).sleepBehaviour == .reset)
     }
 
     @Test func describesOnlyTheChangedSettings() {

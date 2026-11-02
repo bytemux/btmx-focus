@@ -80,7 +80,9 @@ build only.
 
 The first time you press Play, macOS asks for permission to show
 notifications. If you deny it, the end-of-phase sound still plays. Change it
-later in System Settings → Notifications → btmx-focus.
+later in System Settings → Notifications → btmx-focus. With Completion
+notifications off (Settings → Notifications & Sounds) nothing is posted and
+permission isn't asked for.
 
 The app is ad-hoc signed, so after a rebuild macOS may treat it as a new app
 and ask again.
@@ -126,6 +128,13 @@ app:
 3. Clicking elsewhere closes the popover; Settings' three tabs switch; ⌘W
    closes Settings and `⋯` → Settings… brings the same window back.
 4. Sleep the Mac (Apple menu → Sleep), wake it: Ready(Focus) `30:00`.
+   With Settings → General → "When the Mac sleeps" on Pause, a Running
+   phase wakes Paused at the time it had; on Keep counting it wakes still
+   Running, with the time asleep gone. Keep counting through a phase end
+   (E2E app with `--e2e-focus-seconds 60`, sleep for 2 minutes): one sound
+   and banner at wake, the next phase Ready; with Auto-start on and several
+   phase ends passed, still only one sound and banner, and the log shows a
+   `phase end:` line for each.
 5. The first ▶ asks for notification permission.
 6. Phase end: a notification banner, and the Glass sound (after focus) or
    Hero (after rest). To check this without waiting 30 minutes, launch the
@@ -137,3 +146,24 @@ app:
    out and in, the app is in the menu bar. Removing it in System Settings →
    Login Items un-ticks the box when you come back; "requires approval"
    shows a note and an "Open Login Items" button.
+9. Settings → Notifications & Sounds: picking a sound in either picker plays
+   it ("None" plays nothing); releasing the volume slider plays the sound at
+   that volume, and a phase end then plays at that volume too; with
+   Completion notifications off a phase end shows no banner, and on a fresh
+   install (`tccutil reset All com.btmx.focus`) the first ▶ asks nothing.
+10. Silent during Do Not Disturb and Focus (Notifications & Sounds): absent
+    in the ad-hoc build (no Communication Notifications entitlement,
+    ADR 0014), where a phase end always plays its sound. In a build signed
+    with the entitlement: shown, off by default, nothing asked at launch;
+    turning it on asks once to read the Focus status. With access granted
+    and Do Not Disturb on, a phase end plays no sound; with Do Not Disturb
+    off, or the option off, it does.
+11. Settings → General: with "Auto-start timer" on, a phase end plays the
+    sound and the next phase is already running (E2E app with
+    `--e2e-focus-seconds 5 --e2e-rest-seconds 5`; move the mouse near
+    each phase end, or idle skip takes the 5 s break). With "Skip break if
+    idle" on (default), don't touch the keyboard or mouse through a Focus
+    phase end: the app goes straight to Ready(Focus) (Running with
+    auto-start), the banner says you were away for the break, and the log
+    shows `Rest skipped (idle …)`. Touch the mouse just before the end and
+    the break comes as usual.

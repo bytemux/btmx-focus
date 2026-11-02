@@ -57,16 +57,37 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationDidFinishLaunching(_: Notification) {
-        let model = TimerModel(
-            engine: TimerEngine(schedule: e2e?.schedule ?? .standard),
-            signaler: PhaseSignaler(notificationsEnabled: e2e?.notificationsEnabled ?? true)
-        )
         let settings = SettingsStore()
+        let model = TimerModel(
+            signaler: PhaseSignaler(settings: settings, notificationsEnabled: e2e?.notificationsEnabled ?? true)
+        )
+        pushTimerSettings(from: settings, to: model)
         statusItemController = StatusItemController(
             model: model, settings: settings, settingsWindow: SettingsWindowController(settings: settings)
         )
         if let e2e {
             CrashLog.record("e2e build: \(e2e)")
+        }
+    }
+
+    /// Hands the interval, phase-end and sleep settings to the timer now and
+    /// on every change. Only the settings are tracked, not the model, so
+    /// timer ticks don't wake this.
+    private func pushTimerSettings(from settings: SettingsStore, to model: TimerModel) {
+        let e2e = e2e
+        observeChanges { [weak settings] in
+            settings.map { settings in
+                let preferences = settings.preferences
+                return (
+                    e2e?.schedule(from: preferences) ?? preferences.schedule,
+                    e2e?.phaseEnd(from: preferences) ?? preferences.phaseEnd,
+                    preferences.sleepBehaviour
+                )
+            }
+        } apply: { [weak model] schedule, phaseEnd, sleepBehaviour in
+            model?.setSchedule(schedule)
+            model?.setPhaseEnd(phaseEnd)
+            model?.setSleepBehaviour(sleepBehaviour)
         }
     }
 

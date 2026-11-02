@@ -33,8 +33,11 @@ public final class FocusApp: @unchecked Sendable {
 
     // MARK: Launch and quit
 
-    /// Arguments every test launch uses: no notification prompt, breadcrumbs on.
-    public static let quietArguments = [E2EContract.Argument.noNotifications, E2EContract.Argument.debugLogging]
+    /// Arguments every test launch uses: no notification prompt, breadcrumbs
+    /// on, and no idle skip (the driver is idle while it waits for a phase end).
+    public static let quietArguments = [
+        E2EContract.Argument.noNotifications, E2EContract.Argument.debugLogging, E2EContract.Argument.noIdleSkip,
+    ]
 
     /// Quits any running E2E instance, then launches a new one in the
     /// background and waits for its status item. Breadcrumbs are collected

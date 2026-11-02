@@ -2,7 +2,8 @@ import AppKit
 import BtmxFocusCore
 
 /// What the menu-bar item shows for a timer at a given moment: the time, the
-/// SF Symbol, the running colour and the VoiceOver label.
+/// icon (an SF Symbol, or the progress ring while Running), the running
+/// colour and the VoiceOver label.
 public struct StatusItemPresentation: Equatable {
     /// `mm:ss`, or `nil` for icon only.
     public let text: String?
@@ -10,6 +11,9 @@ public struct StatusItemPresentation: Equatable {
     /// Red while focusing, green while resting; `nil` means the default
     /// template look (follows the menu bar's white/gray).
     public let runningColor: NSColor?
+    /// Elapsed fraction of the phase while Running, drawn as a progress ring
+    /// in place of the symbol; `nil` otherwise.
+    public let ringProgress: Double?
     /// e.g. "Focus, running, 24 minutes, 13 seconds remaining".
     public let accessibilityLabel: String
 
@@ -22,6 +26,7 @@ public struct StatusItemPresentation: Equatable {
         text = isReady || !preferences.showTimerInMenuBar ? nil : ClockFormat.string(for: remaining)
         symbolName = Self.symbolName(for: state)
         runningColor = Self.runningColor(for: state)
+        ringProgress = if case .running = state { engine.progress(at: now) } else { nil }
         accessibilityLabel = PhaseStyle.accessibilityLabel(state: state, remaining: remaining)
     }
 
@@ -31,8 +36,8 @@ public struct StatusItemPresentation: Equatable {
         switch state {
         case .ready(.focus): "timer.circle"
         case .running(.focus, _): "timer.circle.fill"
-        case .ready(.rest): "cup.and.saucer"
-        case .running(.rest, _): "cup.and.saucer.fill"
+        case .ready(.rest), .ready(.longRest): "cup.and.saucer"
+        case .running(.rest, _), .running(.longRest, _): "cup.and.saucer.fill"
         case .paused: "pause.circle"
         }
     }
@@ -40,7 +45,7 @@ public struct StatusItemPresentation: Equatable {
     private static func runningColor(for state: TimerState) -> NSColor? {
         switch state {
         case .running(.focus, _): .systemRed
-        case .running(.rest, _): .systemGreen
+        case .running(.rest, _), .running(.longRest, _): .systemGreen
         case .ready, .paused: nil
         }
     }
@@ -49,6 +54,9 @@ public struct StatusItemPresentation: Equatable {
 @MainActor
 public extension StatusItemPresentation {
     var image: NSImage? {
+        if let ringProgress, let runningColor {
+            return ProgressRing.menuBarImage(progress: ringProgress, color: runningColor)
+        }
         guard let image = NSImage(systemSymbolName: symbolName, accessibilityDescription: nil) else { return nil }
         guard let color = runningColor else {
             image.isTemplate = true

@@ -5,39 +5,68 @@ import SwiftUI
 
 public struct PopoverView: View {
     let model: TimerModel
+    /// Settings → Intervals → Target per day, for "Today n/target".
+    let dailyTarget: Int
     let openSettings: () -> Void
     /// Esc: closes the popover and hands the keyboard back.
     let close: () -> Void
     @AppStorage(CrashLog.debugLoggingKey) private var debugLogging = false
 
-    public init(model: TimerModel, openSettings: @escaping () -> Void, close: @escaping () -> Void = {}) {
+    public init(
+        model: TimerModel, dailyTarget: Int, openSettings: @escaping () -> Void, close: @escaping () -> Void = {}
+    ) {
         self.model = model
+        self.dailyTarget = dailyTarget
         self.openSettings = openSettings
         self.close = close
     }
 
+    /// The phase colour (red Focus, green Rest), gray while Paused.
+    private var ringColor: Color {
+        switch model.state {
+        case .paused: .secondary
+        case .ready(.focus), .running(.focus, _): .red
+        case .ready(.rest), .running(.rest, _), .ready(.longRest), .running(.longRest, _): .green
+        }
+    }
+
     public var body: some View {
         VStack(spacing: 12) {
-            Text(PhaseStyle.name(of: model.state.phase))
-                .font(.title3)
-                .foregroundStyle(.secondary)
-                .accessibilityIdentifier(AccessibilityID.Popover.phase)
+            // The phase name, clock and Play/Pause sit together inside the ring.
+            VStack(spacing: 0) {
+                Text(PhaseStyle.name(of: model.state.phase))
+                    .font(.title3)
+                    .foregroundStyle(.secondary)
+                    .accessibilityIdentifier(AccessibilityID.Popover.phase)
 
-            Text(model.clockText)
-                .font(.system(size: 56, weight: .light, design: .rounded).monospacedDigit())
-                .accessibilityLabel(PhaseStyle.accessibilityLabel(state: model.state, remaining: model.remaining))
-                .accessibilityIdentifier(AccessibilityID.Popover.clock)
+                Text(model.clockText)
+                    .font(.system(size: 38, weight: .light, design: .rounded).monospacedDigit())
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.5)
+                    .frame(maxWidth: 140)
+                    .accessibilityLabel(
+                        PhaseStyle.accessibilityLabel(state: model.state, remaining: model.remaining)
+                    )
+                    .accessibilityIdentifier(AccessibilityID.Popover.clock)
 
-            Button(action: model.togglePlayPause) {
-                Image(systemName: model.isRunning ? "pause.fill" : "play.fill")
-                    .font(.system(size: 28))
-                    .frame(width: 56, height: 44)
-                    .contentShape(Rectangle())
+                Button(action: model.togglePlayPause) {
+                    Image(systemName: model.isRunning ? "pause.fill" : "play.fill")
+                        .font(.system(size: 24))
+                        .frame(width: 56, height: 40)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .keyboardShortcut(.defaultAction)
+                .accessibilityLabel(model.isRunning ? Text("Pause") : Text("Play"))
+                .accessibilityIdentifier(AccessibilityID.Popover.playPause)
             }
-            .buttonStyle(.plain)
-            .keyboardShortcut(.defaultAction)
-            .accessibilityLabel(model.isRunning ? Text("Pause") : Text("Play"))
-            .accessibilityIdentifier(AccessibilityID.Popover.playPause)
+            .frame(width: 200, height: 200)
+            .background(ProgressRing(progress: model.progress, color: ringColor))
+
+            Text("Today \(model.todayCount)/\(dailyTarget)")
+                .font(.callout.monospacedDigit())
+                .foregroundStyle(.secondary)
+                .accessibilityIdentifier(AccessibilityID.Popover.today)
 
             Divider()
 

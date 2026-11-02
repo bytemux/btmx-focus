@@ -16,5 +16,8 @@ public enum E2EContract {
         public static let debugLogging = "--e2e-debug-logging"
         /// Wipes all settings before anything reads them.
         public static let resetSettings = "--e2e-reset-settings"
+        /// Skip break if idle off whatever Settings say: the driver sends no
+        /// input while it waits for a phase end, which would skip the break.
+        public static let noIdleSkip = "--e2e-no-idle-skip"
     }
 }

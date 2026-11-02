@@ -5,5 +5,5 @@ import BtmxFocusCore
 public protocol PhaseSignalSink: AnyObject {
     /// Called on Play, before anything needs to be announced.
     func requestAuthorizationIfNeeded()
-    func phaseCompleted(_ phase: Phase)
+    func phaseCompleted(_ completion: PhaseCompletion)
 }

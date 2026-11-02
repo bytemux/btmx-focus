@@ -1,5 +1,13 @@
 import Foundation
 
+/// Whether the popover and the Settings window follow the system's light or
+/// dark appearance (`auto`) or force one.
+public enum Appearance: String, CaseIterable, Sendable {
+    case auto
+    case light
+    case dark
+}
+
 /// Every user setting with its default. Lengths are in minutes; an empty
 /// sound name means no sound.
 public struct Preferences: Sendable, Equatable {
@@ -19,8 +27,37 @@ public struct Preferences: Sendable, Equatable {
     public var breakEndSound = "Hero"
     /// `NSSound.volume`, 0...1.
     public var volume = 1.0
+    /// No end-of-phase sound while Do Not Disturb or a Focus mode is on.
+    public var silentDuringFocus = false
+    public var appearance = Appearance.auto
+    /// What the timer does when the Mac goes to sleep (ADR 0015).
+    public var sleepBehaviour = SleepBehaviour.reset
 
     public init() {}
+}
+
+/// The Intervals tab: preset values for its pop-up menus, and the schedule
+/// they make.
+public extension Preferences {
+    static let focusMinuteOptions = [1, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 75, 90, 120]
+    static let shortRestMinuteOptions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20]
+    static let longRestMinuteOptions = [5, 10, 15, 20, 25, 30, 40, 45, 60]
+    static let longRestEveryOptions = Array(2 ... 10)
+    static let dailyTargetOptions = Array(1 ... 20)
+
+    var schedule: Schedule {
+        Schedule(
+            focus: .seconds(focusMinutes * 60),
+            rest: .seconds(shortRestMinutes * 60),
+            longRest: .seconds(longRestMinutes * 60),
+            longRestEvery: longRestEvery
+        )
+    }
+
+    /// The General tab's phase-end options, for the engine.
+    var phaseEnd: PhaseEndOptions {
+        PhaseEndOptions(autoStart: autoStart, skipBreakIfIdle: skipBreakIfIdle)
+    }
 }
 
 /// One `UserDefaults` key per setting, named after the property. Missing keys
@@ -44,6 +81,10 @@ public extension Preferences {
         focusEndSound = read("focusEndSound", standard.focusEndSound)
         breakEndSound = read("breakEndSound", standard.breakEndSound)
         volume = read("volume", standard.volume)
+        silentDuringFocus = read("silentDuringFocus", standard.silentDuringFocus)
+        appearance = Appearance(rawValue: read("appearance", standard.appearance.rawValue)) ?? standard.appearance
+        sleepBehaviour = SleepBehaviour(rawValue: read("sleepBehaviour", standard.sleepBehaviour.rawValue))
+            ?? standard.sleepBehaviour
     }
 
     /// Writes only the settings that differ from `old`, so settings the user
@@ -74,8 +115,13 @@ public extension Preferences {
         }
     }
 
-    /// Each setting as (property name, value), in declaration order.
+    /// Each setting as (property name, value), in declaration order. Enums
+    /// appear as their raw value, which is what `UserDefaults` stores.
     private var settings: [(String, Any)] {
-        Mirror(reflecting: self).children.compactMap { child in child.label.map { ($0, child.value) } }
+        Mirror(reflecting: self).children.compactMap { child in
+            child.label.map { label in
+                (label, (child.value as? any RawRepresentable)?.rawValue ?? child.value)
+            }
+        }
     }
 }

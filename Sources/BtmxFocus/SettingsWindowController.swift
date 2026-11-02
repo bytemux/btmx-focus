@@ -43,6 +43,16 @@ final class SettingsWindowController {
             window.center()
         }
         window.setFrameAutosaveName(autosaveName)
+        followAppearance(of: window)
         return window
+    }
+
+    /// Applies the Appearance setting now and again whenever it changes.
+    private func followAppearance(of window: NSWindow) {
+        observeChanges { [weak self, weak window] () -> Void? in
+            guard let self, let window else { return nil }
+            window.appearance = settings.preferences.appearance.nsAppearance
+            return ()
+        }
     }
 }

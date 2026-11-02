@@ -23,16 +23,16 @@ struct SnapshotTests {
         await state.drive(harness)
         // The ⋯ menu's Debug Logging toggle reads @AppStorage; keep it off
         // the test process's real defaults.
-        let view = PopoverView(model: harness.model, openSettings: {})
+        let view = PopoverView(model: harness.model, dailyTarget: 10, openSettings: {})
             .defaultAppStorage(freshDefaults().defaults)
-        assertSnapshot(of: view, size: CGSize(width: 240, height: 226), named: state.rawValue)
+        assertSnapshot(of: view, size: CGSize(width: 240, height: 308), named: state.rawValue)
     }
 
     /// Each tab's content without the tab bar, which offscreen rendering
     /// can't draw (its selected segment comes out blank).
     @Test(arguments: SettingsTab.allCases)
     func settings(tab: SettingsTab) {
-        let store = SettingsStore(defaults: freshDefaults().defaults)
+        let store = SettingsStore(defaults: freshDefaults().defaults, focusStatus: FakeFocusStatus())
         let launchAtLogin = LaunchAtLogin(service: FakeLoginItemService(), center: NotificationCenter())
         let view = SettingsTabContent(tab: tab, settings: store, launchAtLogin: launchAtLogin)
         assertSnapshot(of: view, size: CGSize(width: 460, height: 260), named: "\(tab)")
@@ -41,6 +41,7 @@ struct SnapshotTests {
     @Test(arguments: [
         ("ready", TimerState.ready(.focus)),
         ("running", .running(.focus, endDate: TimerHarness.t0 + 1453)),
+        ("runningRest", .running(.rest, endDate: TimerHarness.t0 + 75)),
     ])
     func statusItem(name: String, state: TimerState) {
         let presentation = StatusItemPresentation(
@@ -58,6 +59,7 @@ enum PopoverState: String, CaseIterable {
     case runningFocus
     case paused
     case readyRest
+    case readyLongRest
 
     /// Gets a fresh model into this state, 5 min 47 s into Focus where the
     /// clock has moved.
@@ -75,6 +77,13 @@ enum PopoverState: String, CaseIterable {
             harness.model.pause()
         case .readyRest:
             harness.model.skip()
+        case .readyLongRest:
+            // One 1 s Focus interval per cycle, so its end loads a long break.
+            harness.model.setSchedule(Schedule(
+                focus: .seconds(1), rest: .seconds(5 * 60), longRest: .seconds(15 * 60), longRestEvery: 1
+            ))
+            harness.model.play()
+            await harness.clock.advance(by: 1)
         }
     }
 }

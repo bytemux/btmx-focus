@@ -10,6 +10,8 @@ import ServiceManagement
 @MainActor
 public final class FakeClock: TimerClock {
     public private(set) var now: Date
+    /// How long the user has been away; set by the test.
+    public var idleTime = Duration.zero
     private var sleepers: [UUID: (deadline: Date, continuation: CheckedContinuation<Void, Error>)] = [:]
 
     public init(now: Date) {
@@ -63,8 +65,9 @@ public func settle() async {
 
 @MainActor
 public final class RecordingSignaler: PhaseSignalSink {
-    public private(set) var completedPhases: [Phase] = []
+    public private(set) var completions: [PhaseCompletion] = []
     public private(set) var authorizationRequests = 0
+    public var completedPhases: [Phase] { completions.map(\.phase) }
 
     public init() {}
 
@@ -72,8 +75,30 @@ public final class RecordingSignaler: PhaseSignalSink {
         authorizationRequests += 1
     }
 
-    public func phaseCompleted(_ phase: Phase) {
-        completedPhases.append(phase)
+    public func phaseCompleted(_ completion: PhaseCompletion) {
+        completions.append(completion)
+    }
+}
+
+/// Records the sounds it is asked to play instead of playing them.
+@MainActor
+public final class RecordingSoundPlayer: SoundPlayer {
+    public struct Played: Equatable, Sendable {
+        public let name: String
+        public let volume: Double
+
+        public init(name: String, volume: Double) {
+            self.name = name
+            self.volume = volume
+        }
+    }
+
+    public private(set) var played: [Played] = []
+
+    public init() {}
+
+    public func play(_ name: String, volume: Double) {
+        played.append(Played(name: name, volume: volume))
     }
 }
 
@@ -113,11 +138,21 @@ public struct TimerHarness {
     public let workspace = NotificationCenter()
     public let distributed = NotificationCenter()
     public let local = NotificationCenter()
+    /// Where the daily tally is saved; pass another harness's to "relaunch".
+    public let defaults: UserDefaults
     public let model: TimerModel
 
-    public init(engine: TimerEngine = TimerEngine()) {
+    /// Days run midnight to midnight UTC.
+    public nonisolated static let calendar: Calendar = {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: "UTC")!
+        return calendar
+    }()
+
+    public init(engine: TimerEngine = TimerEngine(), defaults: UserDefaults = freshDefaults().defaults) {
+        self.defaults = defaults
         model = TimerModel(
-            engine: engine, clock: clock, signaler: signaler,
+            engine: engine, clock: clock, signaler: signaler, defaults: defaults, calendar: Self.calendar,
             workspaceCenter: workspace, distributedCenter: distributed, defaultCenter: local
         )
     }
@@ -132,5 +167,23 @@ public struct TimerHarness {
 
     public func postClockChange() {
         local.post(name: .NSSystemClockDidChange, object: nil)
+    }
+}
+
+/// A Focus status the test sets, counting permission requests. Unavailable
+/// by default, like the ad-hoc-signed build (ADR 0014).
+@MainActor
+public final class FakeFocusStatus: FocusStatusSource {
+    public let isAvailable: Bool
+    public var isFocusActive: Bool?
+    public private(set) var accessRequests = 0
+
+    public init(isAvailable: Bool = false, isFocusActive: Bool? = nil) {
+        self.isAvailable = isAvailable
+        self.isFocusActive = isFocusActive
+    }
+
+    public func requestAccess() {
+        accessRequests += 1
     }
 }
