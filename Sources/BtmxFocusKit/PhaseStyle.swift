@@ -7,6 +7,7 @@ public enum PhaseStyle {
         switch phase {
         case .focus: String(localized: "Focus")
         case .rest: String(localized: "Rest")
+        case .longRest: String(localized: "Long break")
         }
     }
 

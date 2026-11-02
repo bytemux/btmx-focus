@@ -29,7 +29,7 @@ public final class SettingsStore {
     public func pickEndSound(_ name: String, after phase: Phase) {
         switch phase {
         case .focus: preferences.focusEndSound = name
-        case .rest: preferences.breakEndSound = name
+        case .rest, .longRest: preferences.breakEndSound = name
         }
         previewEndSound(after: phase)
     }

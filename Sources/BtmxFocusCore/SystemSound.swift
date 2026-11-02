@@ -12,7 +12,7 @@ public extension Preferences {
     func endSound(after phase: Phase) -> String? {
         let name = switch phase {
         case .focus: focusEndSound
-        case .rest: breakEndSound
+        case .rest, .longRest: breakEndSound
         }
         return name.isEmpty ? nil : name
     }
