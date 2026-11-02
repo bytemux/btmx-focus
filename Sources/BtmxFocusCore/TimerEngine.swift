@@ -106,9 +106,18 @@ public enum TimerEvent: Sendable, Equatable {
 /// so callers (and tests) control the clock.
 public struct TimerEngine: Sendable, Equatable {
     public private(set) var state: TimerState
-    /// Takes effect at once for a Ready phase; a Running phase keeps its
-    /// deadline and a Paused one its remaining time.
-    public var schedule: Schedule
+    /// Takes effect at once for a Ready phase. A Running or Paused phase whose
+    /// own length changes goes back to Ready at the new length; one whose
+    /// length stays keeps its deadline or remaining time.
+    public var schedule: Schedule {
+        didSet {
+            let phase = state.phase
+            if schedule.duration(of: phase) != oldValue.duration(of: phase) {
+                state = .ready(phase)
+            }
+        }
+    }
+
     public var phaseEnd: PhaseEndOptions
     public var sleepBehaviour = SleepBehaviour.reset
     /// Focus intervals since the cycle started (Reset or the last long break).

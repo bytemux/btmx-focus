@@ -1,7 +1,6 @@
 import AppKit
 import BtmxFocusKit
 import BtmxFocusUIContract
-import Observation
 import SwiftUI
 
 /// Menu-bar item (icon + monospaced `mm:ss`): a click toggles the popover, a
@@ -93,14 +92,10 @@ final class StatusItemController: NSObject {
         return window.convertToScreen(button.convert(rect, to: nil))
     }
 
-    /// Redraws the button, applies the Appearance setting to the popover and
-    /// re-arms observation for the next model or settings change.
+    /// Redraws the button, applies the Appearance setting to the popover, now
+    /// and on every model or settings change.
     private func render() {
-        withObservationTracking {
-            draw()
-        } onChange: { [weak self] in
-            Task { @MainActor in self?.render() }
-        }
+        observeChanges { [weak self] in self?.draw() }
     }
 
     private func draw() {

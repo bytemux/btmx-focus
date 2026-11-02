@@ -224,23 +224,43 @@ struct ScheduleChangeTests {
         #expect(engine.state == .running(phase, endDate: t0 + expected))
     }
 
-    @Test func runningPhaseKeepsItsDeadline() {
+    @Test func runningPhaseGoesBackToReadyWhenItsLengthChanges() {
         var engine = TimerEngine()
         engine.play(now: t0)
         engine.schedule = longer
+        #expect(engine.state == .ready(.focus))
+        #expect(engine.remaining(at: at(600)) == .seconds(50 * 60))
+        #expect(engine.progress(at: at(600)) == 0)
+    }
+
+    @Test func pausedPhaseGoesBackToReadyWhenItsLengthChanges() {
+        var engine = TimerEngine(state: .paused(.rest, remaining: .seconds(60)))
+        engine.schedule = longer
+        #expect(engine.state == .ready(.rest))
+        #expect(engine.remaining(at: t0) == .seconds(10 * 60))
+    }
+
+    @Test func runningPhaseKeepsItsDeadlineWhenAnotherLengthChanges() {
+        var engine = TimerEngine()
+        engine.play(now: t0)
+        var schedule = Schedule.standard
+        schedule.rest = .seconds(10 * 60)
+        engine.schedule = schedule
         #expect(engine.state == .running(.focus, endDate: at(1800)))
-        #expect(engine.remaining(at: at(600)) == .seconds(1200))
+        #expect(engine.progress(at: at(900)) == 0.5)
         // What comes next follows the new schedule.
         #expect(engine.tick(now: at(1800)) == .phaseCompleted(
             PhaseCompletion(phase: .focus, next: .rest, nextDuration: .seconds(10 * 60))
         ))
     }
 
-    @Test func pausedPhaseKeepsItsRemainingTime() {
+    @Test func pausedPhaseKeepsItsRemainingTimeWhenAnotherLengthChanges() {
         var engine = TimerEngine()
         engine.play(now: t0)
         engine.pause(now: at(600))
-        engine.schedule = longer
+        var schedule = Schedule.standard
+        schedule.longRest = .seconds(20 * 60)
+        engine.schedule = schedule
         #expect(engine.remaining(at: at(9000)) == .seconds(1200))
         engine.play(now: at(9000))
         #expect(engine.state == .running(.focus, endDate: at(10200)))

@@ -28,13 +28,15 @@ public final class TimerModel {
 
     /// The notification centers default to the system ones: NSWorkspace's
     /// (sleep, wake, display), the distributed one (screen lock) and the default
-    /// one (system clock changes). The daily tally is kept in `defaults`.
+    /// one (system clock changes). The daily tally is kept in `defaults`; the
+    /// default calendar follows time-zone changes, so "today" ends at the
+    /// local midnight of wherever the Mac is now.
     public init(
         engine: TimerEngine = TimerEngine(),
         clock: TimerClock = SystemClock(),
         signaler: PhaseSignalSink,
         defaults: UserDefaults = .standard,
-        calendar: Calendar = .current,
+        calendar: Calendar = .autoupdatingCurrent,
         workspaceCenter: NotificationCenter = NSWorkspace.shared.notificationCenter,
         distributedCenter: NotificationCenter = DistributedNotificationCenter.default(),
         defaultCenter: NotificationCenter = .default
@@ -87,7 +89,7 @@ public final class TimerModel {
     }
 
     /// New phase lengths from Settings: a Ready phase shows its new length at
-    /// once; a Running phase keeps its deadline, a Paused one its remaining time.
+    /// once; a Running or Paused phase whose length changed goes back to Ready.
     public func setSchedule(_ schedule: Schedule) {
         guard schedule != engine.schedule else { return }
         apply("schedule change") { engine, _ in engine.schedule = schedule }
@@ -185,6 +187,9 @@ public final class TimerModel {
         ) { [weak self] _ in
             MainActor.assumeIsolated {
                 guard let model = self else { return }
+                // A deadline that passed before its tick ran ends now, not
+                // lost to the reset or paused at 00:00.
+                model.tick()
                 model.apply("system sleep, \(model.engine.sleepBehaviour.rawValue)") { $0.systemWillSleep(now: $1) }
             }
         })

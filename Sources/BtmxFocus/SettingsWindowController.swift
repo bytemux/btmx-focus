@@ -1,7 +1,6 @@
 import AppKit
 import BtmxFocusKit
 import BtmxFocusUIContract
-import Observation
 import SwiftUI
 
 /// The one Settings window: AppKit `NSWindow` hosting SwiftUI (ADR 0002,
@@ -50,13 +49,10 @@ final class SettingsWindowController {
 
     /// Applies the Appearance setting now and again whenever it changes.
     private func followAppearance(of window: NSWindow) {
-        withObservationTracking {
-            window.appearance = self.settings.preferences.appearance.nsAppearance
-        } onChange: { [weak self, weak window] in
-            Task { @MainActor in
-                guard let self, let window else { return }
-                self.followAppearance(of: window)
-            }
+        observeChanges { [weak self, weak window] () -> Void? in
+            guard let self, let window else { return nil }
+            window.appearance = settings.preferences.appearance.nsAppearance
+            return ()
         }
     }
 }

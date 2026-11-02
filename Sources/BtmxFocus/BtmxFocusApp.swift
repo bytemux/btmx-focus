@@ -59,7 +59,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_: Notification) {
         let settings = SettingsStore()
         let model = TimerModel(
-            engine: TimerEngine(schedule: schedule(from: settings), phaseEnd: phaseEnd(from: settings)),
             signaler: PhaseSignaler(settings: settings, notificationsEnabled: e2e?.notificationsEnabled ?? true)
         )
         pushTimerSettings(from: settings, to: model)
@@ -71,29 +70,25 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    private func schedule(from settings: SettingsStore) -> Schedule {
-        e2e?.schedule(from: settings.preferences) ?? settings.preferences.schedule
-    }
-
-    private func phaseEnd(from settings: SettingsStore) -> PhaseEndOptions {
-        e2e?.phaseEnd(from: settings.preferences) ?? settings.preferences.phaseEnd
-    }
-
-    /// Hands every change of the interval, phase-end and sleep settings to the
-    /// timer, and re-arms observation for the next one. Only the settings are
-    /// tracked, not the model, so timer ticks don't wake this.
+    /// Hands the interval, phase-end and sleep settings to the timer now and
+    /// on every change. Only the settings are tracked, not the model, so
+    /// timer ticks don't wake this.
     private func pushTimerSettings(from settings: SettingsStore, to model: TimerModel) {
-        let (newSchedule, phaseEnd, sleepBehaviour) = withObservationTracking {
-            (self.schedule(from: settings), self.phaseEnd(from: settings), settings.preferences.sleepBehaviour)
-        } onChange: { [weak self, weak settings, weak model] in
-            Task { @MainActor in
-                guard let self, let settings, let model else { return }
-                self.pushTimerSettings(from: settings, to: model)
+        let e2e = e2e
+        observeChanges { [weak settings] in
+            settings.map { settings in
+                let preferences = settings.preferences
+                return (
+                    e2e?.schedule(from: preferences) ?? preferences.schedule,
+                    e2e?.phaseEnd(from: preferences) ?? preferences.phaseEnd,
+                    preferences.sleepBehaviour
+                )
             }
+        } apply: { [weak model] schedule, phaseEnd, sleepBehaviour in
+            model?.setSchedule(schedule)
+            model?.setPhaseEnd(phaseEnd)
+            model?.setSleepBehaviour(sleepBehaviour)
         }
-        model.setSchedule(newSchedule)
-        model.setPhaseEnd(phaseEnd)
-        model.setSleepBehaviour(sleepBehaviour)
     }
 
     func applicationWillTerminate(_: Notification) {
