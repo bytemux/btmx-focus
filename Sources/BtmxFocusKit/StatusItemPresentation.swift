@@ -31,8 +31,8 @@ public struct StatusItemPresentation: Equatable {
         switch state {
         case .ready(.focus): "timer.circle"
         case .running(.focus, _): "timer.circle.fill"
-        case .ready(.rest): "cup.and.saucer"
-        case .running(.rest, _): "cup.and.saucer.fill"
+        case .ready(.rest), .ready(.longRest): "cup.and.saucer"
+        case .running(.rest, _), .running(.longRest, _): "cup.and.saucer.fill"
         case .paused: "pause.circle"
         }
     }
@@ -40,7 +40,7 @@ public struct StatusItemPresentation: Equatable {
     private static func runningColor(for state: TimerState) -> NSColor? {
         switch state {
         case .running(.focus, _): .systemRed
-        case .running(.rest, _): .systemGreen
+        case .running(.rest, _), .running(.longRest, _): .systemGreen
         case .ready, .paused: nil
         }
     }

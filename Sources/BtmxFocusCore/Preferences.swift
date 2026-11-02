@@ -23,6 +23,24 @@ public struct Preferences: Sendable, Equatable {
     public init() {}
 }
 
+/// The Intervals tab: preset values for its pop-up menus, and the schedule
+/// they make.
+public extension Preferences {
+    static let focusMinuteOptions = [1, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 75, 90, 120]
+    static let shortRestMinuteOptions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20]
+    static let longRestMinuteOptions = [5, 10, 15, 20, 25, 30, 40, 45, 60]
+    static let longRestEveryOptions = Array(2 ... 10)
+
+    var schedule: Schedule {
+        Schedule(
+            focus: .seconds(focusMinutes * 60),
+            rest: .seconds(shortRestMinutes * 60),
+            longRest: .seconds(longRestMinutes * 60),
+            longRestEvery: longRestEvery
+        )
+    }
+}
+
 /// One `UserDefaults` key per setting, named after the property. Missing keys
 /// and values of the wrong type read as the default.
 public extension Preferences {

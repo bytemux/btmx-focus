@@ -63,8 +63,9 @@ public func settle() async {
 
 @MainActor
 public final class RecordingSignaler: PhaseSignalSink {
-    public private(set) var completedPhases: [Phase] = []
+    public private(set) var completions: [PhaseCompletion] = []
     public private(set) var authorizationRequests = 0
+    public var completedPhases: [Phase] { completions.map(\.phase) }
 
     public init() {}
 
@@ -72,8 +73,8 @@ public final class RecordingSignaler: PhaseSignalSink {
         authorizationRequests += 1
     }
 
-    public func phaseCompleted(_ phase: Phase) {
-        completedPhases.append(phase)
+    public func phaseCompleted(_ completion: PhaseCompletion) {
+        completions.append(completion)
     }
 }
 

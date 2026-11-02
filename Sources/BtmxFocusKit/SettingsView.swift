@@ -1,3 +1,4 @@
+import BtmxFocusCore
 import BtmxFocusUIContract
 import SwiftUI
 
@@ -51,11 +52,55 @@ public struct SettingsTabContent: View {
                 Toggle("Show timer in menu bar", isOn: $settings.preferences.showTimerInMenuBar)
                     .accessibilityIdentifier(AccessibilityID.Settings.showTimerInMenuBar)
                 launchAtLoginToggle
-            case .intervals, .notificationsAndSounds:
+            case .intervals:
+                intervalPicker(
+                    "Focus duration",
+                    $settings.preferences.focusMinutes,
+                    Preferences.focusMinuteOptions,
+                    label: Self.minutes
+                )
+                intervalPicker(
+                    "Short break duration",
+                    $settings.preferences.shortRestMinutes,
+                    Preferences.shortRestMinuteOptions,
+                    label: Self.minutes
+                )
+                intervalPicker(
+                    "Long break duration",
+                    $settings.preferences.longRestMinutes,
+                    Preferences.longRestMinuteOptions,
+                    label: Self.minutes
+                )
+                intervalPicker(
+                    "Long break after",
+                    $settings.preferences.longRestEvery,
+                    Preferences.longRestEveryOptions,
+                    label: Self.intervals
+                )
+            case .notificationsAndSounds:
                 EmptyView()
             }
         }
         .formStyle(.grouped)
+    }
+
+    /// A pop-up of preset values; a stored value that isn't a preset is listed too.
+    private func intervalPicker(
+        _ title: LocalizedStringKey, _ value: Binding<Int>, _ presets: [Int], label: @escaping (Int) -> String
+    ) -> some View {
+        Picker(title, selection: value) {
+            ForEach(Set(presets + [value.wrappedValue]).sorted(), id: \.self) { option in
+                Text(label(option)).tag(option)
+            }
+        }
+    }
+
+    private static func minutes(_ count: Int) -> String {
+        count == 1 ? String(localized: "1 minute") : String(localized: "\(count) minutes")
+    }
+
+    private static func intervals(_ count: Int) -> String {
+        count == 1 ? String(localized: "1 interval") : String(localized: "\(count) intervals")
     }
 
     private var launchAtLoginToggle: some View {

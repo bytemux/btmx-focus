@@ -42,7 +42,7 @@ drive it like the system would, with no waiting:
 (a test-only dependency) and compares them with the reference PNGs in
 `Tests/BtmxFocusSnapshotTests/__Snapshots__/`, which are committed:
 
-- `PopoverView` in Ready(Focus), Running(Focus), Paused, Ready(Rest)
+- `PopoverView` in Ready(Focus), Running(Focus), Paused, Ready(Rest), Ready(Long break)
 - each Settings tab's content (`SettingsTabContent`), without the tab bar:
   offscreen rendering can't draw its selected segment
 - the status-item button, Ready and Running

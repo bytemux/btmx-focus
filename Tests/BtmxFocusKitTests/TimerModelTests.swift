@@ -129,6 +129,45 @@ struct TimerModelTests {
         #expect(harness.model.canReset)
     }
 
+    @Test func newScheduleShowsAtOnceWhileReadyAndKeepsTheCountdownOtherwise() async {
+        let harness = TimerHarness()
+        var preferences = Preferences()
+        preferences.focusMinutes = 50
+        preferences.shortRestMinutes = 10
+        harness.model.setSchedule(preferences.schedule)
+        #expect(harness.model.clockText == "50:00")
+
+        harness.model.play()
+        await harness.clock.advance(by: 60)
+        preferences.focusMinutes = 1
+        harness.model.setSchedule(preferences.schedule)
+        #expect(harness.model.clockText == "49:00")
+
+        await harness.clock.advance(by: 49 * 60)
+        #expect(harness.signaler.completions == [
+            PhaseCompletion(phase: .focus, next: .rest, nextDuration: .seconds(600)),
+        ])
+        #expect(harness.model.clockText == "10:00")
+    }
+
+    @Test func longBreakFollowsTheLastFocusOfTheCycle() async {
+        let harness = TimerHarness()
+        var preferences = Preferences()
+        preferences.focusMinutes = 1
+        preferences.longRestEvery = 2
+        harness.model.setSchedule(preferences.schedule)
+        for _ in 0 ..< 2 {
+            harness.model.play()
+            await harness.clock.advance(by: 60)
+            if harness.model.state == .ready(.rest) {
+                harness.model.skip()
+            }
+        }
+        #expect(harness.model.state == .ready(.longRest))
+        #expect(harness.model.clockText == "15:00")
+        #expect(harness.signaler.completions.last?.next == .longRest)
+    }
+
     @Test func playAsksForNotificationPermission() {
         let harness = TimerHarness()
         harness.model.play()

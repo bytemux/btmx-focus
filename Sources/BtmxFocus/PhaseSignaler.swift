@@ -38,31 +38,25 @@ final class PhaseSignaler: PhaseSignalSink {
         }
     }
 
-    func phaseCompleted(_ phase: Phase) {
-        let sound = soundName(after: phase)
+    func phaseCompleted(_ completion: PhaseCompletion) {
+        let sound = soundName(after: completion.phase)
         NSSound(named: sound)?.play()
-        postNotification(after: phase)
+        postNotification(PhaseNotification(completion))
         CrashLog.record("signal: \(sound) sound\(notificationCenter == nil ? "" : " + notification")")
     }
 
     private func soundName(after phase: Phase) -> NSSound.Name {
         switch phase {
         case .focus: "Glass"
-        case .rest: "Hero"
+        case .rest, .longRest: "Hero"
         }
     }
 
-    private func postNotification(after phase: Phase) {
+    private func postNotification(_ notification: PhaseNotification) {
         guard let center = notificationCenter else { return }
         let content = UNMutableNotificationContent()
-        switch phase {
-        case .focus:
-            content.title = String(localized: "Focus done")
-            content.body = String(localized: "Time for a 5 min break.")
-        case .rest:
-            content.title = String(localized: "Break over")
-            content.body = String(localized: "Ready for 30 min of focus.")
-        }
+        content.title = notification.title
+        content.body = notification.body
         let request = UNNotificationRequest(identifier: "phase-end", content: content, trigger: nil)
         center.add(request)
     }
