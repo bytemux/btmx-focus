@@ -38,3 +38,4 @@ What becomes easier or harder as a result.
 | [0011](0011-each-phase-waits-for-play.md) | Each phase waits for Play | Accepted |
 | [0012](0012-diagnostics-without-disk-writes.md) | Diagnostics without disk writes in normal use | Accepted |
 | [0013](0013-no-network-sandboxed-no-ads.md) | No network, sandboxed, no ads or upsells | Accepted |
+| [0014](0014-focus-mode-detection-through-infocusstatuscenter.md) | Focus mode detection through `INFocusStatusCenter` | Accepted |

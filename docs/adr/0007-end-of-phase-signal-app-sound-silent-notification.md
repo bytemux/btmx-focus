@@ -24,6 +24,6 @@ lost whenever the notification is.
 ## Consequences
 
 - The sound plays even under Do Not Disturb. Whether it should respect it
-  is a later option.
+  is a later option (Silent during Focus, ADR 0014).
 - Banners show while the popover has made the app active (a foreground
   notification delegate).

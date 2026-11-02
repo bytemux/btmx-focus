@@ -29,6 +29,7 @@ public enum AccessibilityID {
         public static let focusEndSound = "btmx.settings.focusEndSound"
         public static let breakEndSound = "btmx.settings.breakEndSound"
         public static let volume = "btmx.settings.volume"
+        public static let silentDuringFocus = "btmx.settings.silentDuringFocus"
         public static let completionNotifications = "btmx.settings.completionNotifications"
         public static let appearance = "btmx.settings.appearance"
     }

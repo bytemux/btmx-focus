@@ -156,3 +156,18 @@ public struct TimerHarness {
         local.post(name: .NSSystemClockDidChange, object: nil)
     }
 }
+
+/// A Focus status the test sets, counting permission requests.
+@MainActor
+public final class FakeFocusStatus: FocusStatusSource {
+    public var isFocusActive: Bool?
+    public private(set) var accessRequests = 0
+
+    public init(isFocusActive: Bool? = nil) {
+        self.isFocusActive = isFocusActive
+    }
+
+    public func requestAccess() {
+        accessRequests += 1
+    }
+}

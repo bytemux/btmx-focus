@@ -27,6 +27,8 @@ public struct Preferences: Sendable, Equatable {
     public var breakEndSound = "Hero"
     /// `NSSound.volume`, 0...1.
     public var volume = 1.0
+    /// No end-of-phase sound while Do Not Disturb or a Focus mode is on.
+    public var silentDuringFocus = false
     public var appearance = Appearance.auto
 
     public init() {}
@@ -53,6 +55,7 @@ public extension Preferences {
         focusEndSound = read("focusEndSound", standard.focusEndSound)
         breakEndSound = read("breakEndSound", standard.breakEndSound)
         volume = read("volume", standard.volume)
+        silentDuringFocus = read("silentDuringFocus", standard.silentDuringFocus)
         appearance = Appearance(rawValue: read("appearance", standard.appearance.rawValue)) ?? standard.appearance
     }
 

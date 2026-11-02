@@ -13,16 +13,32 @@ public final class SettingsStore {
             guard !changes.isEmpty else { return }
             preferences.save(to: defaults, changedFrom: oldValue)
             CrashLog.record("settings: \(changes.joined(separator: ", "))")
+            if preferences.silentDuringFocus, !oldValue.silentDuringFocus {
+                focusStatus.requestAccess()
+            }
         }
     }
 
     @ObservationIgnored private let defaults: UserDefaults
     @ObservationIgnored private let soundPlayer: SoundPlayer
+    @ObservationIgnored private let focusStatus: FocusStatusSource
 
-    public init(defaults: UserDefaults = .standard, soundPlayer: SoundPlayer = SystemSoundPlayer()) {
+    public init(
+        defaults: UserDefaults = .standard,
+        soundPlayer: SoundPlayer = SystemSoundPlayer(),
+        focusStatus: FocusStatusSource = SystemFocusStatus()
+    ) {
         self.defaults = defaults
         self.soundPlayer = soundPlayer
+        self.focusStatus = focusStatus
         preferences = Preferences(defaults: defaults)
+    }
+
+    /// The sound to play at the end of `phase` now: nil for "None", or while
+    /// a Focus mode is on and Silent during Focus is set.
+    public func endSoundToPlay(after phase: Phase) -> String? {
+        let focusActive = preferences.silentDuringFocus ? focusStatus.isFocusActive : nil
+        return preferences.endSound(after: phase, focusActive: focusActive)
     }
 
     /// Sets the sound for the end of `phase` ("" for None) and plays it as a preview.
