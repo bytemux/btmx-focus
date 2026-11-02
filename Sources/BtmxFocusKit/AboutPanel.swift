@@ -16,7 +16,9 @@ public enum AboutPanel {
     }
 
     /// Opens the panel in front. The app has no Dock icon, so it must
-    /// activate itself or the panel opens behind other apps.
+    /// activate itself or the panel opens behind other apps; the plain
+    /// `NSApp.activate()` is turned down from the popover's menu on macOS 27
+    /// (see `StatusItemController.togglePopover`).
     @MainActor public static func show() {
         CrashLog.record("about open")
         NSApp.activate(ignoringOtherApps: true)

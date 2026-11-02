@@ -43,6 +43,9 @@ open build/btmx-focus.app
 The app appears in the menu bar only (no Dock icon). Click the item to open
 the popover. Quit from the `⋯` menu in the popover.
 
+The script stamps the git commit into the bundle's Info.plist
+(`BtmxCommit`); the About panel shows it as the version.
+
 For a debug build: `scripts/build-app.sh debug`. `scripts/build-app.sh e2e`
 builds `build/btmx-focus E2E.app` for the E2E tests (`docs/testing.md`).
 
@@ -167,3 +170,6 @@ app:
     auto-start), the banner says you were away for the break, and the log
     shows `Rest skipped (idle …)`. Touch the mouse just before the end and
     the break comes as usual.
+12. `⋯` → About btmx-focus opens the standard About panel in front of other
+    apps, showing "Version <commit>" (`<commit>-dirty` when built with
+    uncommitted changes).

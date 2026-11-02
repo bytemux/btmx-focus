@@ -38,8 +38,8 @@ plist="$app/Contents/Info.plist"
 /usr/libexec/PlistBuddy -c "Set :CFBundleIdentifier $bundle_id" \
     -c "Set :CFBundleName $name" -c "Set :CFBundleDisplayName $name" "$plist"
 # The About panel's version (AboutPanel.commitKey): the commit, for now.
-commit="$(git rev-parse --short HEAD)"
-git diff --quiet HEAD || commit="$commit-dirty"
+commit="$(git rev-parse --short HEAD 2>/dev/null || echo unknown)"
+[ -z "$(git status --porcelain 2>/dev/null)" ] || commit="$commit-dirty"
 /usr/libexec/PlistBuddy -c "Add :BtmxCommit string $commit" "$plist"
 
 codesign --force --sign - --options runtime \
