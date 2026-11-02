@@ -8,14 +8,22 @@ A native macOS menu-bar focus timer: 30 minutes of focus, 5 minutes of rest, one
 
 ## Install
 
+Requires macOS 15 or newer on Apple silicon.
+
+btmx-focus is not notarized by Apple. Installation using brew removes the quarantine
+flag from btmx-focus.app so macOS opens it without asking.
+
+### Using brew
+
 ```sh
 brew install bytemux/tap/btmx-focus
 ```
 
-Or download the DMG from [Releases](https://github.com/bytemux/btmx-focus/releases).
-Requires macOS 15 or newer on Apple silicon. The app isn't notarized: the
-Homebrew cask clears the quarantine flag for you; after a direct download,
-allow the first launch in System Settings → Privacy & Security → Open Anyway.
+### Manual install
+
+Download the DMG from [Releases](https://github.com/bytemux/btmx-focus/releases).
+
+After download, allow the first launch in System Settings → Privacy & Security → Open Anyway.
 
 ## Develop
 
