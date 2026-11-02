@@ -72,6 +72,13 @@ public final class TimerModel {
         apply("reset") { engine, _ in engine.reset() }
     }
 
+    /// New phase lengths from Settings: a Ready phase shows its new length at
+    /// once; a Running phase keeps its deadline, a Paused one its remaining time.
+    public func setSchedule(_ schedule: Schedule) {
+        guard schedule != engine.schedule else { return }
+        apply("schedule change") { engine, _ in engine.schedule = schedule }
+    }
+
     /// Applies a user or system action and leaves a breadcrumb with the state change.
     private func apply(_ action: String, _ change: (inout TimerEngine, Date) -> Void) {
         let date = clock.now
@@ -91,9 +98,9 @@ public final class TimerModel {
     private func tick() {
         let date = clock.now
         now = date
-        if case let .phaseCompleted(phase) = engine.tick(now: date) {
-            CrashLog.record("phase end: \(PhaseStyle.name(of: phase)) → \(describe(at: date))")
-            signaler.phaseCompleted(phase)
+        if case let .phaseCompleted(completion) = engine.tick(now: date) {
+            CrashLog.record("phase end: \(PhaseStyle.name(of: completion.phase)) → \(describe(at: date))")
+            signaler.phaseCompleted(completion)
         }
     }
 
