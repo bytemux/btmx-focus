@@ -33,7 +33,8 @@ struct SnapshotTests {
     @Test(arguments: SettingsTab.allCases)
     func settings(tab: SettingsTab) {
         let store = SettingsStore(defaults: freshDefaults().defaults)
-        let view = SettingsTabContent(tab: tab, settings: store)
+        let launchAtLogin = LaunchAtLogin(service: FakeLoginItemService(), center: NotificationCenter())
+        let view = SettingsTabContent(tab: tab, settings: store, launchAtLogin: launchAtLogin)
         assertSnapshot(of: view, size: CGSize(width: 460, height: 260), named: "\(tab)")
     }
 

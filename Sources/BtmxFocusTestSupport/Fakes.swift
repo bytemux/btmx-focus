@@ -1,6 +1,7 @@
 import AppKit
 import BtmxFocusCore
 import BtmxFocusKit
+import ServiceManagement
 
 // Test doubles shared by the unit and snapshot test targets.
 
@@ -73,6 +74,23 @@ public final class RecordingSignaler: PhaseSignalSink {
 
     public func phaseCompleted(_ phase: Phase) {
         completedPhases.append(phase)
+    }
+}
+
+/// A login-item service whose status is whatever the test sets.
+public final class FakeLoginItemService: LoginItemService {
+    public var status: SMAppService.Status
+
+    public init(status: SMAppService.Status = .notRegistered) {
+        self.status = status
+    }
+
+    public func register() throws {
+        status = .enabled
+    }
+
+    public func unregister() throws {
+        status = .notRegistered
     }
 }
 
