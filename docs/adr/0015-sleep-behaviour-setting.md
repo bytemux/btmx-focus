@@ -27,32 +27,33 @@ chooses what happens at `NSWorkspace.willSleepNotification`:
   or Paused one is untouched. Waking doesn't resume it; the user presses
   Play.
 - **Keep counting**: nothing happens at sleep; the deadline stands. At
-  `NSWorkspace.didWakeNotification` (and at any tick) the model catches up
-  with every deadline that has passed:
-  - Each passed phase is completed in order, exactly as if the Mac had
-    been awake: the long-break cycle advances, Idle skip applies (using
-    the idle time read at wake) and each phase end is logged. A Focus that
-    ended while asleep does **not** count towards the daily tally: nobody
-    worked it.
-  - Only the **latest** phase end is signalled: one sound, one banner,
-    describing the phase that is now Ready (or, with Auto-start, already
-    Running with part of its time gone).
+  `NSWorkspace.didWakeNotification` (or whichever tick runs first after
+  wake) the model completes the phase whose deadline passed while asleep,
+  as one the user was away for:
+  - The sleep counts as idle time, so with Idle skip a Focus that ended
+    during a sleep at least as long as the break skips the break.
+  - The next phase waits for Play, even with Auto-start: the user wakes
+    to a Ready phase (Focus, after a break or a skipped one), never to
+    one that has been running unattended.
+  - A Focus that ended while asleep does **not** count towards the daily
+    tally: nobody worked it. The long-break cycle still advances.
+  - The phase end is signalled once, at wake.
 
 The rule lives in `TimerEngine.systemWillSleep(now:)` (per
-`TimerEngine.sleepBehaviour`) and in `TimerModel.tick()`, which completes
-all passed deadlines but signals once. The same coalescing applies to a
-manual clock jump past several deadlines.
+`TimerEngine.sleepBehaviour`), `TimerEngine.tick(endedWhileAsleep:)` and
+`TimerModel.tick()`. The model knows a phase ended while asleep because it
+completed it between `willSleep` and the catch-up at `didWake`. A manual
+clock jump past several Auto-started deadlines completes each of them but
+signals only the latest.
 
 ## Consequences
 
 - ADR 0005's deadline-based timing still holds; its sleep-reset decision
   is now just the default (0005 is amended, not superseded).
-- With Keep counting and Auto-start, a long sleep advances the cycle
-  (the literal meaning of "keep counting") but leaves "Today" as it was.
-  The model knows a phase ended while asleep because it completed it
-  between `willSleep` and the catch-up at `didWake`, whichever tick runs
-  first after wake.
-- Whether `CGEventSource` idle time includes the time asleep decides
-  whether Idle skip fires for a Focus that ended while asleep; that is a
-  manual check, not something the tests can see.
+- Keep counting with Auto-start completes at most one phase per sleep:
+  the next waits for Play, so a long sleep can't run through the cycle or
+  fill "Today".
+- The idle time used is the longer of `CGEventSource`'s and the time since
+  `willSleep`, so Idle skip doesn't depend on whether the system counts
+  sleep as idle.
 - Pause and Keep counting changes take effect at the next sleep.

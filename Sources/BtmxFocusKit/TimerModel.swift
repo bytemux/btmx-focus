@@ -22,10 +22,10 @@ public final class TimerModel {
     @ObservationIgnored private var observers: [NSObjectProtocol] = []
     @ObservationIgnored private var displayAsleep = false
     @ObservationIgnored private var screenLocked = false
-    /// Between the Mac going to sleep and the catch-up at wake: a phase
-    /// completed then ended while asleep, and a Focus that did doesn't count
-    /// towards today.
-    @ObservationIgnored private var asleep = false
+    /// When the Mac went to sleep, until the catch-up at wake. A phase
+    /// completed in between ended while asleep: the next one waits for Play,
+    /// the sleep counts as idle time, and a Focus doesn't count towards today.
+    @ObservationIgnored private var asleepSince: Date?
     /// While nobody can see the menu bar, skip per-second redraws and wake only
     /// at the phase end.
     private var secondsVisible: Bool { !displayAsleep && !screenLocked }
@@ -146,14 +146,15 @@ public final class TimerModel {
     }
 
     private func completePhase(endingAt deadline: Date, now date: Date) -> PhaseCompletion? {
-        // Idle time is read only if the engine asks (a Focus end with the option on).
+        // Idle time is read only if the engine asks (a Focus end with the
+        // option on). Time asleep is time away, whatever the idle counter says.
         var idleTime = Duration.zero
         let event = engine.tick(now: date, idleTime: {
-            idleTime = clock.idleTime
+            idleTime = max(clock.idleTime, asleepSince.map { .seconds(date.timeIntervalSince($0)) } ?? .zero)
             return idleTime
-        }())
+        }(), endedWhileAsleep: asleepSince != nil)
         guard case let .phaseCompleted(completion) = event else { return nil }
-        if completion.phase == .focus, !asleep {
+        if completion.phase == .focus, asleepSince == nil {
             tally.recordFocusInterval(at: deadline, calendar: calendar)
         }
         let skipped = completion.skippedBreak.map { phase in
@@ -194,7 +195,7 @@ public final class TimerModel {
                 // A deadline that passed before its tick ran ends now, not
                 // lost to the reset or paused at 00:00.
                 model.tick()
-                model.asleep = true
+                model.asleepSince = model.clock.now
                 model.apply("system sleep, \(model.engine.sleepBehaviour.rawValue)") { $0.systemWillSleep(now: $1) }
             }
         })
@@ -203,7 +204,7 @@ public final class TimerModel {
         observeVisibility(distributed, .init("com.apple.screenIsLocked")) { $0.screenLocked = true }
         observeVisibility(distributed, .init("com.apple.screenIsUnlocked")) { $0.screenLocked = false }
         // A tick may not have run while asleep: catch up with the deadline (keep counting).
-        observeCatchUp(workspace, NSWorkspace.didWakeNotification, "system wake") { $0.asleep = false }
+        observeCatchUp(workspace, NSWorkspace.didWakeNotification, "system wake") { $0.asleepSince = nil }
         observeCatchUp(local, .NSSystemClockDidChange, "system clock changed")
     }
 

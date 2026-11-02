@@ -176,7 +176,12 @@ public struct TimerEngine: Sendable, Equatable {
     /// is read only when a Focus phase ends with skip-break-if-idle on. Idle
     /// for at least the coming break's length counts that break as taken and
     /// loads Focus instead, Ready even with auto-start.
-    public mutating func tick(now: Date, idleTime: @autoclosure () -> Duration = .zero) -> TimerEvent? {
+    ///
+    /// `endedWhileAsleep`: the phase ended while the Mac slept, so the next
+    /// one waits for Play even with auto-start; the user isn't there yet.
+    public mutating func tick(
+        now: Date, idleTime: @autoclosure () -> Duration = .zero, endedWhileAsleep: Bool = false
+    ) -> TimerEvent? {
         guard case let .running(phase, endDate) = state, now >= endDate else { return nil }
         var next = phaseAfterCompleting(phase)
         var skippedBreak: Phase?
@@ -184,9 +189,9 @@ public struct TimerEngine: Sendable, Equatable {
             skippedBreak = next
             next = .focus
         }
-        // A skipped break means nobody is there: Focus waits for them, even
-        // with auto-start, rather than running Focus after Focus unattended.
-        state = phaseEnd.autoStart && skippedBreak == nil
+        // A skipped break or a sleep means nobody is there: the next phase
+        // waits for them, even with auto-start, rather than running unattended.
+        state = phaseEnd.autoStart && skippedBreak == nil && !endedWhileAsleep
             ? .running(next, endDate: endDate + schedule.duration(of: next))
             : .ready(next)
         return .phaseCompleted(PhaseCompletion(

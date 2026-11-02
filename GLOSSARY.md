@@ -89,10 +89,10 @@ sleep behaviour.
 **Sleep behaviour**:
 What the timer does when the Mac goes to sleep, set by "When the Mac
 sleeps": Reset (a sleep reset, the default), Pause (a Running phase keeps
-its remaining time) or Keep counting (the deadline stands; phases that end
-while asleep, several only with Auto-start, are completed at wake with a
-single end-of-phase signal for the latest, and don't count towards the
-daily tally).
+its remaining time) or Keep counting (the deadline stands; a phase that
+ends while asleep is completed at wake as one the user was away for: the
+sleep counts as idle, the next phase waits for Play even with Auto-start,
+and a Focus doesn't count towards the daily tally).
 
 **Auto-start**:
 An option under which the next phase starts Running at the previous phase's

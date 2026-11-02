@@ -291,22 +291,41 @@ struct TimerModelSleepTests {
         #expect(harness.model.todayCount == 0)
     }
 
-    @Test func wakePastSeveralAutoStartedDeadlinesSignalsOnlyTheLatest() {
+    @Test(arguments: [
+        // Focus ran into the sleep: the sleep was the break, if long enough.
+        (Phase.focus, true, TimerState.ready(.focus)),
+        (.focus, false, .ready(.rest)),
+        // A break ran into the sleep: Focus waits, never runs unattended.
+        (.rest, true, .ready(.focus)),
+    ])
+    func wakeWithAutoStartWaitsForPlay(sleptIn phase: Phase, skipBreakIfIdle: Bool, expected: TimerState) {
         let harness = TimerHarness()
         harness.model.setSleepBehaviour(.keepCounting)
-        harness.model.setPhaseEnd(PhaseEndOptions(autoStart: true))
+        harness.model.setPhaseEnd(PhaseEndOptions(autoStart: true, skipBreakIfIdle: skipBreakIfIdle))
+        if phase == .rest {
+            harness.model.skip()
+        }
         harness.model.play()
         harness.post(workspace: NSWorkspace.willSleepNotification)
 
-        // Focus ends at +30 min, Rest +35, Focus +65, Rest +70, Focus +100, Rest +105.
         harness.clock.set(t0 + 2 * 3600)
         harness.post(workspace: NSWorkspace.didWakeNotification)
-        #expect(harness.signaler.completions == [
-            PhaseCompletion(phase: .rest, next: .focus, nextDuration: .seconds(1800)),
-        ])
-        #expect(harness.model.state == .running(.focus, endDate: t0 + 135 * 60))
-        #expect(harness.model.clockText == "15:00")
-        #expect(harness.model.todayCount == 0)
+        #expect(harness.signaler.completedPhases == [phase])
+        #expect(harness.model.state == expected)
+    }
+
+    @Test func aNapShorterThanTheBreakDoesNotSkipIt() {
+        let harness = TimerHarness()
+        harness.model.setSleepBehaviour(.keepCounting)
+        harness.model.setPhaseEnd(PhaseEndOptions(skipBreakIfIdle: true))
+        harness.model.play()
+        harness.clock.set(t0 + 1700)
+        harness.post(workspace: NSWorkspace.willSleepNotification)
+
+        // Asleep 2 of the 5 minutes of Rest; Focus ended during the nap.
+        harness.clock.set(t0 + 1820)
+        harness.post(workspace: NSWorkspace.didWakeNotification)
+        #expect(harness.model.state == .ready(.rest))
     }
 
     @Test func focusEndedWhileAsleepDoesNotCountTowardsToday() async {
