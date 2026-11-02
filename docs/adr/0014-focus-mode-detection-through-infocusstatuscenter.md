@@ -35,6 +35,11 @@ Options on macOS 15+:
   a phase must be noticed.
 - The option is off by default, so ADR 0007's behaviour is unchanged until
   the user opts in.
+- The Settings window shows the option only when the running code signature
+  carries the Communication Notifications entitlement
+  (`SecTaskCopyValueForEntitlement`, `FocusStatusSource.isAvailable`). It
+  checks the entitlement, not the authorization, so the user can still turn
+  the option on and be asked; a switch that can never work is hidden.
 
 ## Consequences
 
@@ -42,6 +47,6 @@ Options on macOS 15+:
   `btmx-focus.entitlements` yet: an ad-hoc-signed app with it won't launch.
   Until the app is signed with a provisioning profile that grants it (App
   Store or Developer ID, to be confirmed in the developer portal), the
-  option has no effect and the sound always plays.
+  option is hidden and the sound always plays.
 - Only the sound is affected; the notification is already held back by the
   system under a Focus.

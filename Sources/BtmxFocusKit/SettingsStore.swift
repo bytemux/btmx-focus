@@ -34,6 +34,12 @@ public final class SettingsStore {
         preferences = Preferences(defaults: defaults)
     }
 
+    /// Whether Silent during Focus can work in this build (ADR 0014); the
+    /// Settings window hides the option otherwise.
+    public var canSilenceDuringFocus: Bool {
+        focusStatus.isAvailable
+    }
+
     /// The sound to play at the end of `phase` now: nil for "None", or while
     /// a Focus mode is on and Silent during Focus is set.
     public func endSoundToPlay(after phase: Phase) -> String? {

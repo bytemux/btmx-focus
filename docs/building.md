@@ -144,9 +144,10 @@ app:
    that volume, and a phase end then plays at that volume too; with
    Completion notifications off a phase end shows no banner, and on a fresh
    install (`tccutil reset All com.btmx.focus`) the first ▶ asks nothing.
-10. Silent during Do Not Disturb and Focus (Notifications & Sounds): off by
-    default, and nothing is asked at launch. Turning it on asks once to read
-    the Focus status (only in a build signed with the Communication
-    Notifications entitlement, ADR 0014; the ad-hoc build asks nothing and
-    always plays). With access granted and Do Not Disturb on, a phase end
-    plays no sound; with Do Not Disturb off, or the option off, it does.
+10. Silent during Do Not Disturb and Focus (Notifications & Sounds): absent
+    in the ad-hoc build (no Communication Notifications entitlement,
+    ADR 0014), where a phase end always plays its sound. In a build signed
+    with the entitlement: shown, off by default, nothing asked at launch;
+    turning it on asks once to read the Focus status. With access granted
+    and Do Not Disturb on, a phase end plays no sound; with Do Not Disturb
+    off, or the option off, it does.

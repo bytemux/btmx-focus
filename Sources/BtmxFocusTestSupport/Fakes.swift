@@ -158,13 +158,16 @@ public struct TimerHarness {
     }
 }
 
-/// A Focus status the test sets, counting permission requests.
+/// A Focus status the test sets, counting permission requests. Unavailable
+/// by default, like the ad-hoc-signed build (ADR 0014).
 @MainActor
 public final class FakeFocusStatus: FocusStatusSource {
+    public let isAvailable: Bool
     public var isFocusActive: Bool?
     public private(set) var accessRequests = 0
 
-    public init(isFocusActive: Bool? = nil) {
+    public init(isAvailable: Bool = false, isFocusActive: Bool? = nil) {
+        self.isAvailable = isAvailable
         self.isFocusActive = isFocusActive
     }
 

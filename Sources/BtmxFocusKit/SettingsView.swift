@@ -124,8 +124,10 @@ public struct SettingsTabContent: View {
             }
         }
         .accessibilityIdentifier(AccessibilityID.Settings.volume)
-        Toggle("Silent during Do Not Disturb and Focus", isOn: $settings.preferences.silentDuringFocus)
-            .accessibilityIdentifier(AccessibilityID.Settings.silentDuringFocus)
+        if settings.canSilenceDuringFocus {
+            Toggle("Silent during Do Not Disturb and Focus", isOn: $settings.preferences.silentDuringFocus)
+                .accessibilityIdentifier(AccessibilityID.Settings.silentDuringFocus)
+        }
         Toggle("Completion notifications", isOn: $settings.preferences.completionNotifications)
             .accessibilityIdentifier(AccessibilityID.Settings.completionNotifications)
     }
