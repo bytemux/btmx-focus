@@ -6,4 +6,5 @@ A native macOS menu-bar focus timer: 30 minutes of focus, 5 minutes of rest, one
 
 - [Build and run](docs/building.md)
 - [Testing](docs/testing.md)
-- [Spec](docs/spec.md)
+- [Glossary](GLOSSARY.md) and [decisions](docs/adr/)
+- [Roadmap](https://github.com/bytemux/btmx-focus/issues)

@@ -55,4 +55,4 @@ snapshot library.
   (`SNAPSHOT_RECORD=1 swift test`).
 - Developer ID signing, notarization, an app icon or extensions will need
   either more script steps or an Xcode project (e.g. generated with XcodeGen
-  or Tuist). We'll revisit this before distribution (spec Q1).
+  or Tuist). We'll revisit this before distribution (#26).

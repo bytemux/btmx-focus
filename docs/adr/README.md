@@ -23,17 +23,18 @@ What becomes easier or harder as a result.
 
 ## Index
 
-Taken from [spec §5](../spec.md#5-technical-approach):
-
 | #    | Topic                                                  | Status  |
 | ---- | ------------------------------------------------------ | ------- |
-| 0001 | Swift 6 with strict concurrency                         | Planned |
+| [0001](0001-swift-6-strict-concurrency.md) | Swift 6 with strict concurrency | Accepted |
 | [0002](0002-status-item-with-appkit.md) | Status item with AppKit, popover content in SwiftUI | Accepted |
-| 0003 | Minimum macOS version: 15                               | Planned |
-| 0004 | Pure `TimerEngine` + `@Observable` model                | Planned |
-| 0005 | Deadline-based timing; reset on system sleep            | Planned |
+| [0003](0003-minimum-macos-15.md) | Minimum macOS version: 15 | Accepted |
+| [0004](0004-pure-timer-engine-and-observable-model.md) | Pure `TimerEngine` wrapped by an `@Observable` model | Accepted |
+| [0005](0005-deadline-based-timing-and-sleep-reset.md) | Deadline-based timing; reset on system sleep | Accepted |
 | [0006](0006-swiftpm-package-instead-of-xcode-project.md) | SwiftPM package instead of an Xcode project | Superseded by 0009 |
-| 0007 | End-of-phase signals: notification + `NSSound`          | Planned |
+| [0007](0007-end-of-phase-signal-app-sound-silent-notification.md) | End-of-phase signal: app-played sound, silent notification | Accepted |
 | [0008](0008-settings-in-userdefaults-through-preferences.md) | Settings in `UserDefaults` through `Preferences` | Accepted |
 | [0009](0009-xcode-swift-testing-and-snapshot-tests.md) | SwiftPM package built with Xcode; Swift Testing + snapshot tests | Accepted |
 | [0010](0010-e2e-tests-through-accessibility-and-real-input.md) | E2E tests drive the bundled app through Accessibility and real input | Accepted |
+| [0011](0011-each-phase-waits-for-play.md) | Each phase waits for Play | Accepted |
+| [0012](0012-diagnostics-without-disk-writes.md) | Diagnostics without disk writes in normal use | Accepted |
+| [0013](0013-no-network-sandboxed-no-ads.md) | No network, sandboxed, no ads or upsells | Accepted |
