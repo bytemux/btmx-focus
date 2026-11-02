@@ -184,4 +184,32 @@ struct TimerModelTests {
         harness.model.play()
         #expect(harness.signaler.authorizationRequests == 1)
     }
+
+    @Test func completedFocusIntervalsCountTowardsToday() async {
+        let harness = TimerHarness()
+        #expect(harness.model.todayCount == 0)
+        harness.model.play()
+        await harness.clock.advance(by: 1800)
+        #expect(harness.model.todayCount == 1)
+
+        // A completed Rest and a skipped Focus don't count.
+        harness.model.play()
+        await harness.clock.advance(by: 300)
+        harness.model.skip()
+        #expect(harness.model.state == .ready(.rest))
+        #expect(harness.model.todayCount == 1)
+    }
+
+    @Test func todayCountRestartsAtMidnightAndSurvivesRelaunch() async {
+        let harness = TimerHarness()
+        harness.model.play()
+        await harness.clock.advance(by: 1800)
+
+        let relaunched = TimerHarness(defaults: harness.defaults)
+        #expect(relaunched.model.todayCount == 1)
+
+        // t0 is 13:46 UTC; 11 hours on is the next day.
+        relaunched.clock.set(t0 + 11 * 3600)
+        #expect(relaunched.model.todayCount == 0)
+    }
 }

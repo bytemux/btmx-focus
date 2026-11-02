@@ -136,11 +136,21 @@ public struct TimerHarness {
     public let workspace = NotificationCenter()
     public let distributed = NotificationCenter()
     public let local = NotificationCenter()
+    /// Where the daily tally is saved; pass another harness's to "relaunch".
+    public let defaults: UserDefaults
     public let model: TimerModel
 
-    public init(engine: TimerEngine = TimerEngine()) {
+    /// Days run midnight to midnight UTC.
+    public nonisolated static let calendar: Calendar = {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: "UTC")!
+        return calendar
+    }()
+
+    public init(engine: TimerEngine = TimerEngine(), defaults: UserDefaults = freshDefaults().defaults) {
+        self.defaults = defaults
         model = TimerModel(
-            engine: engine, clock: clock, signaler: signaler,
+            engine: engine, clock: clock, signaler: signaler, defaults: defaults, calendar: Self.calendar,
             workspaceCenter: workspace, distributedCenter: distributed, defaultCenter: local
         )
     }

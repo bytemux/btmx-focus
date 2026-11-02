@@ -23,9 +23,9 @@ struct SnapshotTests {
         await state.drive(harness)
         // The ⋯ menu's Debug Logging toggle reads @AppStorage; keep it off
         // the test process's real defaults.
-        let view = PopoverView(model: harness.model, openSettings: {})
+        let view = PopoverView(model: harness.model, dailyTarget: 10, openSettings: {})
             .defaultAppStorage(freshDefaults().defaults)
-        assertSnapshot(of: view, size: CGSize(width: 240, height: 312), named: state.rawValue)
+        assertSnapshot(of: view, size: CGSize(width: 240, height: 340), named: state.rawValue)
     }
 
     /// Each tab's content without the tab bar, which offscreen rendering

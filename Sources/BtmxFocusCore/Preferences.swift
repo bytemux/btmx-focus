@@ -39,6 +39,7 @@ public extension Preferences {
     static let shortRestMinuteOptions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20]
     static let longRestMinuteOptions = [5, 10, 15, 20, 25, 30, 40, 45, 60]
     static let longRestEveryOptions = Array(2 ... 10)
+    static let dailyTargetOptions = Array(1 ... 20)
 
     var schedule: Schedule {
         Schedule(
