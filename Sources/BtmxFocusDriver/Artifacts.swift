@@ -10,7 +10,6 @@ public final class Artifacts: @unchecked Sendable {
 
     public init(directory: URL? = nil) {
         self.directory = directory ?? Artifacts.defaultDirectory()
-        try? FileManager.default.createDirectory(at: self.directory, withIntermediateDirectories: true)
     }
 
     public static func defaultDirectory() -> URL {
@@ -24,8 +23,10 @@ public final class Artifacts: @unchecked Sendable {
             .appending(path: "build/e2e/\(stamp)", directoryHint: .isDirectory)
     }
 
-    /// `NN-name.ext`, numbered in the order taken.
+    /// `NN-name.ext`, numbered in the order taken. Creates the folder on
+    /// first use, so commands that save nothing leave nothing behind.
     public func url(for name: String, ext: String) -> URL {
+        try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         lock.lock()
         counter += 1
         let number = counter
