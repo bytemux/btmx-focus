@@ -82,6 +82,27 @@ public enum Input {
         "ctrl": Modifier(flag: .maskControl, code: 59),
     ]
 
+    /// Modifiers and mouse buttons the system thinks are held right now, e.g.
+    /// `["cmd"]`. A key down without its key up (a crashed or buggy run)
+    /// stays held for every app, turning clicks into ⌘-clicks.
+    public static var held: [String] {
+        let flags = CGEventSource.flagsState(.combinedSessionState)
+        let keys = heldModifierNames.filter { flags.contains($0.flag) }.map(\.name)
+        let buttons: [(String, CGMouseButton)] = [("left mouse", .left), ("right mouse", .right)]
+        return keys + buttons.filter { CGEventSource.buttonState(.combinedSessionState, button: $0.1) }.map(\.0)
+    }
+
+    /// Releases every modifier (left and right keys), whatever holds it.
+    public static func releaseModifiers() {
+        for code: CGKeyCode in [55, 54, 56, 60, 58, 61, 59, 62] {
+            post(key: code, down: false, flags: [])
+        }
+    }
+
+    private static let heldModifierNames: [(name: String, flag: CGEventFlags)] = [
+        ("cmd", .maskCommand), ("shift", .maskShift), ("alt", .maskAlternate), ("ctrl", .maskControl),
+    ]
+
     /// ANSI US layout virtual key codes.
     private static let keyCodes: [String: CGKeyCode] = [
         "a": 0, "s": 1, "d": 2, "f": 3, "h": 4, "g": 5, "z": 6, "x": 7, "c": 8, "v": 9, "b": 11, "q": 12,

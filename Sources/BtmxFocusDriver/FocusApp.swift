@@ -41,6 +41,12 @@ public final class FocusApp: @unchecked Sendable {
     /// from just before launch.
     public func launch(_ arguments: [String] = []) throws {
         try Permissions.preflight()
+        guard Input.held.isEmpty else {
+            throw DriverError("""
+            \(Input.held.joined(separator: "+")) is held down. Let go; if nothing is pressed, a previous run \
+            leaked it: `swift run focus-drive release`.
+            """)
+        }
         guard FileManager.default.fileExists(atPath: appURL.path) else {
             throw DriverError("No app at \(appURL.path); build it with scripts/build-app.sh e2e")
         }
@@ -86,6 +92,32 @@ public final class FocusApp: @unchecked Sendable {
     /// Whether the app is the active one, which gets the keyboard.
     public var isFrontmost: Bool {
         (try? application().attribute(kAXFrontmostAttribute) as? Bool) ?? false
+    }
+
+    /// One line for failure dumps and `focus-drive state`: which app has the
+    /// keyboard and what input the system thinks is held, e.g.
+    /// `frontmost=com.apple.Terminal e2eFrontmost=false held=cmd`.
+    public func inputState() -> String {
+        let focused = AXElement(AXUIElementCreateSystemWide()).element(kAXFocusedApplicationAttribute)
+        var focusedPID: pid_t = 0
+        if let focused {
+            AXUIElementGetPid(focused.raw, &focusedPID)
+        }
+        // AX asks the window server live; NSWorkspace's answer can be stale in
+        // a process without a run loop, so it's only the fallback.
+        let frontmost = NSRunningApplication(processIdentifier: focusedPID)?.bundleIdentifier
+            ?? NSWorkspace.shared.frontmostApplication?.bundleIdentifier ?? "unknown"
+        let held = Input.held.isEmpty ? "none" : Input.held.joined(separator: "+")
+        return "frontmost=\(frontmost) e2eFrontmost=\(isFrontmost) held=\(held)"
+    }
+
+    /// Releases modifiers left held by the run (so they don't follow the user
+    /// into other apps) and names them; nil when the input was clean.
+    public func releaseLeakedInput() -> String? {
+        let held = Input.held
+        guard !held.isEmpty else { return nil }
+        Input.releaseModifiers()
+        return held.joined(separator: "+")
     }
 
     public var isRunning: Bool {
@@ -304,11 +336,15 @@ public final class FocusApp: @unchecked Sendable {
         try application().dump()
     }
 
-    /// Full screenshot, AX tree and breadcrumbs, for a failed test.
+    /// For a failed test: `…-FAILED.txt` (input state, error, AX tree,
+    /// breadcrumbs) and a checkpoint screenshot of the app, if it's running.
     public func saveFailureArtifacts(_ name: String, error: Error) {
-        _ = try? artifacts.screenshot("\(name)-FAILED")
+        let state = inputState()
+        _ = try? screenshot("\(name)-FAILED")
         let tree = (try? tree()) ?? "(app not running)"
         let crumbs = breadcrumbs?.lines.joined(separator: "\n") ?? ""
-        artifacts.write("\(error)\n\nAX tree:\n\(tree)\n\nBreadcrumbs:\n\(crumbs)\n", name: "\(name)-FAILED")
+        artifacts.write(
+            "\(state)\n\n\(error)\n\nAX tree:\n\(tree)\n\nBreadcrumbs:\n\(crumbs)\n", name: "\(name)-FAILED"
+        )
     }
 }

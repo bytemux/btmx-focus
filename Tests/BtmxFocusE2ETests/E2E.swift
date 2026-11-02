@@ -13,7 +13,8 @@ enum E2E {
     static let artifacts = Artifacts()
 
     /// Launches a fresh app with its settings wiped, runs `body`, and quits
-    /// it. On failure saves a screenshot and the AX tree first.
+    /// it. On failure saves the artefacts first. Fails if the run left a
+    /// modifier or mouse button held, after releasing it.
     static func withApp(
         _ name: String, _ arguments: [String] = [], resetSettings: Bool = true, _ body: (FocusApp) throws -> Void
     ) throws {
@@ -22,8 +23,12 @@ enum E2E {
         do {
             try app.launch(FocusApp.quietArguments + reset + arguments)
             try body(app)
+            if let leaked = app.releaseLeakedInput() {
+                throw DriverError("The test left \(leaked) held down (released now)")
+            }
         } catch {
             app.saveFailureArtifacts(name, error: error)
+            _ = app.releaseLeakedInput()
             try? app.quit()
             throw error
         }

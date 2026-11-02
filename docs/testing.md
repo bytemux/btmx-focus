@@ -137,9 +137,16 @@ behind the notch), the test fails saying so; quit some menu-bar apps.
   log, not from the sandboxed `breadcrumbs.log`.
 - **Artefacts** in `build/e2e/<timestamp>/` (gitignored, path printed at
   the end): a numbered screenshot per checkpoint (status item + popover +
-  open menu, and the Settings window), and for each failure a full-screen
-  screenshot plus `…-FAILED.txt` with the error, the AX tree and the
-  breadcrumbs. Look at the screenshots after UI changes.
+  open menu, and the Settings window). For each failure, `…-FAILED.txt`
+  plus a checkpoint screenshot. Look at the screenshots after UI changes.
+- **A failure: read `…-FAILED.txt` first.** Its first line says who had the
+  keyboard and what input was held (`frontmost=… e2eFrontmost=… held=…`),
+  then the error, the AX tree and the breadcrumbs. Most failures are
+  explained there; open the screenshot for visual questions only.
+- **Leaked input**: a test that leaves a modifier or mouse button held
+  fails, and the key is released, so it can't turn later clicks into
+  ⌘-clicks or follow the user into other apps. `launch` refuses to start
+  while anything is held.
 
 ### Exploring with `focus-drive`
 
@@ -154,6 +161,8 @@ swift run focus-drive click statusItem        # or any identifier, or `outside`
 swift run focus-drive click btmx.popover.playPause
 swift run focus-drive key space               # space, escape, cmd+w, …
 swift run focus-drive shot running            # prints the screenshot path
+swift run focus-drive state                   # who has the keyboard, held keys
+swift run focus-drive release                 # release keys a run left held
 swift run focus-drive quit
 ```
 
