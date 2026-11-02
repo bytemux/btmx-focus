@@ -21,6 +21,7 @@ Sources/FocusDrive/        focus-drive CLI on the driver
 Tests/BtmxFocusE2ETests/   E2E suite (runs only with E2E=1)
 scripts/build-app.sh       builds build/btmx-focus.app (or the E2E app)
 scripts/e2e.sh             builds the E2E app and runs the E2E suite
+scripts/release.sh         publishes a GitHub Release and updates the cask
 ```
 
 ## Requirements
@@ -120,6 +121,21 @@ swiftformat --lint .     # check only
 swiftlint                # config: .swiftlint.yml
 ```
 
+## Releasing
+
+Releases are unsigned DMGs on GitHub Releases, installed through our
+Homebrew tap `bytemux/homebrew-tap` (ADR 0016).
+
+1. In a PR, bump `CFBundleShortVersionString` in `Support/Info.plist`
+   (semver: `1.0.1` for fixes, `1.1.0` for features) and merge it.
+2. Run the E2E suite and the manual check below.
+3. On an up-to-date, clean main: `scripts/release.sh`. It runs the tests,
+   builds `build/btmx-focus-<version>.dmg`, creates the release `v<version>`
+   and pushes the new version and checksum to `Casks/btmx-focus.rb` in the
+   tap.
+4. Check: `brew update && brew upgrade btmx-focus` (or `brew install
+   bytemux/tap/btmx-focus`) installs and opens the new version.
+
 ## Editing in Xcode
 
 `open Package.swift` opens the package in Xcode, where you can edit, run the
@@ -129,7 +145,7 @@ tests and run the `BtmxFocus` scheme. Running from Xcode works like
 
 ## Manual MVP check
 
-Before a release, run `scripts/e2e.sh` for the critical path
+Before a release (step 2 above), run `scripts/e2e.sh` for the critical path
 (`docs/testing.md`). What it doesn't cover, check by hand with the bundled
 app:
 

@@ -40,3 +40,4 @@ What becomes easier or harder as a result.
 | [0013](0013-no-network-sandboxed-no-ads.md) | No network, sandboxed, no ads or upsells | Accepted |
 | [0014](0014-focus-mode-detection-through-infocusstatuscenter.md) | Focus mode detection through `INFocusStatusCenter` | Accepted |
 | [0015](0015-sleep-behaviour-setting.md) | Sleep behaviour setting: reset, pause or keep counting | Accepted |
+| [0016](0016-unsigned-releases-through-own-homebrew-tap.md) | Unsigned releases through our own Homebrew tap | Accepted |
