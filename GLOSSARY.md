@@ -123,6 +123,12 @@ _Avoid_: overflow menu, gear menu
 Where the user changes the schedule, signals and other options.
 _Avoid_: preferences
 
+**Appearance**:
+Whether the popover and the Settings window follow the system's light or
+dark mode (Auto, the default) or are forced Light or Dark. The menu-bar item
+always follows the menu bar.
+_Avoid_: theme, dark mode (for the setting)
+
 **Focus mode**:
 The macOS system feature that silences notifications. Not part of this app,
 which is why the app is called btmx-focus and not Focus.
