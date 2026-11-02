@@ -92,7 +92,8 @@ final class StatusItemController: NSObject {
         return window.convertToScreen(button.convert(rect, to: nil))
     }
 
-    /// Redraws the button and re-arms observation for the next model change.
+    /// Redraws the button, applies the Appearance setting to the popover and
+    /// re-arms observation for the next model or settings change.
     private func render() {
         withObservationTracking {
             draw()
@@ -102,6 +103,7 @@ final class StatusItemController: NSObject {
     }
 
     private func draw() {
+        popover.appearance = settings.preferences.appearance.nsAppearance
         guard let button = statusItem.button else { return }
         StatusItemPresentation(engine: model.engine, preferences: settings.preferences, now: model.now)
             .apply(to: button)
