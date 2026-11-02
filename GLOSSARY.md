@@ -99,7 +99,8 @@ _Avoid_: alarm, alert, chime
 
 **Menu-bar item**:
 The app's only permanent presence: a phase icon and, once a phase has
-started, its remaining time.
+started, its remaining time. A click opens the popover; a right-click plays
+or pauses.
 _Avoid_: tray icon, status bar icon
 
 **Popover**:

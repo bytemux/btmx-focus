@@ -4,7 +4,8 @@ import BtmxFocusUIContract
 import Observation
 import SwiftUI
 
-/// Menu-bar item (icon + monospaced `mm:ss`) that toggles the popover.
+/// Menu-bar item (icon + monospaced `mm:ss`): a click toggles the popover, a
+/// right-click plays or pauses the timer.
 @MainActor
 final class StatusItemController: NSObject {
     private let model: TimerModel
@@ -37,13 +38,20 @@ final class StatusItemController: NSObject {
 
         if let button = statusItem.button {
             button.target = self
-            button.action = #selector(togglePopover)
+            button.action = #selector(clicked)
+            button.sendAction(on: [.leftMouseUp, .rightMouseUp])
             button.setAccessibilityIdentifier(AccessibilityID.statusItem)
         }
         render()
     }
 
-    @objc private func togglePopover() {
+    @objc private func clicked() {
+        guard NSApp.currentEvent?.type == .rightMouseUp else { return togglePopover() }
+        CrashLog.record("right-click")
+        model.togglePlayPause()
+    }
+
+    private func togglePopover() {
         if popover.isShown {
             popover.performClose(nil)
             return

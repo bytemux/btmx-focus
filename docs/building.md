@@ -131,3 +131,9 @@ app:
    Hero (after rest). To check this without waiting 30 minutes, launch the
    E2E app with a short schedule:
    `open "build/btmx-focus E2E.app" --args --e2e-focus-seconds 5 --e2e-rest-seconds 5`.
+7. Right-clicking the menu-bar item plays or pauses without opening the
+   popover; a left click still opens it.
+8. Launch at startup (Settings → General), from `/Applications`: on, log
+   out and in, the app is in the menu bar. Removing it in System Settings →
+   Login Items un-ticks the box when you come back; "requires approval"
+   shows a note and an "Open Login Items" button.
