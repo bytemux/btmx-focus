@@ -27,6 +27,7 @@ After download, allow the first launch in System Settings → Privacy & Security
 
 ## Develop
 
+- [Agent workflow](docs/agent-workflow.md): how this repo is built with coding agents
 - [Build and run](docs/building.md)
 - [Testing](docs/testing.md)
 - [Glossary](GLOSSARY.md) and [decisions](docs/adr/)
