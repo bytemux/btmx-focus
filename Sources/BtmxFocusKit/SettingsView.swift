@@ -56,6 +56,12 @@ public struct SettingsTabContent: View {
                     .accessibilityIdentifier(AccessibilityID.Settings.autoStart)
                 Toggle("Skip break if idle", isOn: $settings.preferences.skipBreakIfIdle)
                     .accessibilityIdentifier(AccessibilityID.Settings.skipBreakIfIdle)
+                Picker("When the Mac sleeps", selection: $settings.preferences.sleepBehaviour) {
+                    Text("Reset").tag(SleepBehaviour.reset)
+                    Text("Pause").tag(SleepBehaviour.pause)
+                    Text("Keep counting").tag(SleepBehaviour.keepCounting)
+                }
+                .accessibilityIdentifier(AccessibilityID.Settings.sleepBehaviour)
                 Picker("Appearance", selection: $settings.preferences.appearance) {
                     Text("Auto").tag(Appearance.auto)
                     Text("Light").tag(Appearance.light)

@@ -20,6 +20,7 @@ struct PreferencesTests {
         #expect(preferences.volume == 1.0)
         #expect(preferences.silentDuringFocus == false)
         #expect(preferences.appearance == .auto)
+        #expect(preferences.sleepBehaviour == .reset)
     }
 
     @Test func focusAndBreakEndWithDifferentSoundsByDefault() {
@@ -117,6 +118,7 @@ struct PreferencesTests {
         preferences.volume = 0.25
         preferences.silentDuringFocus = true
         preferences.appearance = .dark
+        preferences.sleepBehaviour = .keepCounting
         preferences.save(to: defaults, changedFrom: Preferences())
 
         #expect(Preferences(defaults: defaults) == preferences)
@@ -151,6 +153,17 @@ struct PreferencesTests {
         let defaults = freshDefaults()
         defaults.set("sepia", forKey: "appearance")
         #expect(Preferences(defaults: defaults).appearance == .auto)
+    }
+
+    @Test func sleepBehaviourIsSavedByNameAndUnknownNamesFallBackToReset() {
+        let defaults = freshDefaults()
+        var preferences = Preferences()
+        preferences.sleepBehaviour = .pause
+        preferences.save(to: defaults, changedFrom: Preferences())
+        #expect(defaults.string(forKey: "sleepBehaviour") == "pause")
+
+        defaults.set("hibernate", forKey: "sleepBehaviour")
+        #expect(Preferences(defaults: defaults).sleepBehaviour == .reset)
     }
 
     @Test func describesOnlyTheChangedSettings() {

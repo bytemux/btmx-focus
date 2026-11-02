@@ -79,12 +79,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         e2e?.phaseEnd(from: settings.preferences) ?? settings.preferences.phaseEnd
     }
 
-    /// Hands every change of the interval and phase-end settings to the
+    /// Hands every change of the interval, phase-end and sleep settings to the
     /// timer, and re-arms observation for the next one. Only the settings are
     /// tracked, not the model, so timer ticks don't wake this.
     private func pushTimerSettings(from settings: SettingsStore, to model: TimerModel) {
-        let (newSchedule, phaseEnd) = withObservationTracking {
-            (self.schedule(from: settings), self.phaseEnd(from: settings))
+        let (newSchedule, phaseEnd, sleepBehaviour) = withObservationTracking {
+            (self.schedule(from: settings), self.phaseEnd(from: settings), settings.preferences.sleepBehaviour)
         } onChange: { [weak self, weak settings, weak model] in
             Task { @MainActor in
                 guard let self, let settings, let model else { return }
@@ -93,6 +93,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         model.setSchedule(newSchedule)
         model.setPhaseEnd(phaseEnd)
+        model.setSleepBehaviour(sleepBehaviour)
     }
 
     func applicationWillTerminate(_: Notification) {
