@@ -8,6 +8,10 @@
 	<string>btmx-focus</string>
 	<key>CFBundleExecutable</key>
 	<string>btmx-focus</string>
+	<key>CFBundleIconFile</key>
+	<string>AppIcon</string>
+	<key>CFBundleIconName</key>
+	<string>AppIcon</string>
 	<key>CFBundleIdentifier</key>
 	<string>com.btmx.focus</string>
 	<key>CFBundleInfoDictionaryVersion</key>

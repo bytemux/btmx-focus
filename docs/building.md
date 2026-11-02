@@ -14,7 +14,7 @@ Sources/BtmxFocusTestSupport/  fake clock and harness shared by the tests
 Tests/BtmxFocusCoreTests/  Swift Testing tests for the engine
 Tests/BtmxFocusKitTests/   app-layer unit tests
 Tests/BtmxFocusSnapshotTests/  snapshot tests + reference images
-Support/                   Info.plist + entitlements for the .app bundle
+Support/                   Info.plist, entitlements and icon for the .app bundle
 Sources/BtmxFocusUIContract/  accessibility ids + E2E launch arguments
 Sources/BtmxFocusDriver/   E2E driver (Accessibility + real input)
 Sources/FocusDrive/        focus-drive CLI on the driver
@@ -42,6 +42,12 @@ open build/btmx-focus.app
 
 The app appears in the menu bar only (no Dock icon). Click the item to open
 the popover. Quit from the `⋯` menu in the popover.
+
+The icon is an Icon Composer icon, `Support/AppIcon.icon`: `icon.json`
+stacks the layers in `Assets/` on the background and adds the Liquid Glass,
+and the build compiles it with `actool`. `scripts/make-icon.swift` draws the
+layers; rerun it after changing the drawing. Open the `.icon` in Icon
+Composer (Xcode → Open Developer Tool) to tune the glass, then build.
 
 The script stamps the git commit into the bundle's Info.plist
 (`BtmxCommit`); the About panel shows it as the version.
