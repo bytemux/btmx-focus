@@ -102,6 +102,13 @@ What tells the user a phase ended: the icon change, a notification and a
 sound. Skip and Reset never give one.
 _Avoid_: alarm, alert, chime
 
+**Silent during Focus**:
+The option (off by default) that drops the sound from the end-of-phase
+signal while Do Not Disturb or another Focus mode is on. If the app can't
+tell (no permission), the sound plays. Shown only in builds that can read
+the Focus status.
+_Avoid_: mute, quiet hours
+
 ## Interface
 
 **Menu-bar item**:

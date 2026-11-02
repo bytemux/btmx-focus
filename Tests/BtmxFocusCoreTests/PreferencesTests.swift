@@ -18,6 +18,7 @@ struct PreferencesTests {
         #expect(preferences.focusEndSound == "Glass")
         #expect(preferences.breakEndSound == "Hero")
         #expect(preferences.volume == 1.0)
+        #expect(preferences.silentDuringFocus == false)
         #expect(preferences.appearance == .auto)
     }
 
@@ -34,6 +35,26 @@ struct PreferencesTests {
         preferences.breakEndSound = "Ping"
         #expect(preferences.endSound(after: .focus) == nil)
         #expect(preferences.endSound(after: .rest) == "Ping")
+    }
+
+    @Test func silentDuringFocusMutesTheEndSoundOnlyWhileAFocusIsOn() {
+        var preferences = Preferences()
+        preferences.silentDuringFocus = true
+        #expect(preferences.endSound(after: .focus, focusActive: true) == nil)
+        #expect(preferences.endSound(after: .rest, focusActive: true) == nil)
+        #expect(preferences.endSound(after: .focus, focusActive: false) == "Glass")
+    }
+
+    /// The end of a phase must be noticed (ADR 0007): when the Focus status
+    /// can't be read (no permission), the sound plays.
+    @Test func unknownFocusStatusPlaysTheEndSound() {
+        var preferences = Preferences()
+        preferences.silentDuringFocus = true
+        #expect(preferences.endSound(after: .rest, focusActive: nil) == "Hero")
+    }
+
+    @Test func endSoundIgnoresFocusWhileTheOptionIsOff() {
+        #expect(Preferences().endSound(after: .focus, focusActive: true) == "Glass")
     }
 
     @Test func soundPickerListsTheBuiltInSounds() {
@@ -86,6 +107,7 @@ struct PreferencesTests {
         preferences.focusEndSound = ""
         preferences.breakEndSound = "Ping"
         preferences.volume = 0.25
+        preferences.silentDuringFocus = true
         preferences.appearance = .dark
         preferences.save(to: defaults, changedFrom: Preferences())
 

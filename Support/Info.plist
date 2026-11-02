@@ -28,6 +28,8 @@
 	<true/>
 	<key>LSUIElement</key>
 	<true/>
+	<key>NSFocusStatusUsageDescription</key>
+	<string>To keep the end-of-phase sound silent while Do Not Disturb or a Focus is on.</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
 </dict>

@@ -16,4 +16,12 @@ public extension Preferences {
         }
         return name.isEmpty ? nil : name
     }
+
+    /// The sound to play when `phase` ends: nil for "None", or while a Focus
+    /// mode (or Do Not Disturb) is on and the user wants silence then.
+    /// `focusActive` is nil when the Focus status can't be read; the sound
+    /// then plays, since the end of a phase must be noticed (ADR 0007).
+    func endSound(after phase: Phase, focusActive: Bool?) -> String? {
+        silentDuringFocus && focusActive == true ? nil : endSound(after: phase)
+    }
 }

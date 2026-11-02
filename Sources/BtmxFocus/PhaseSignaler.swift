@@ -51,7 +51,7 @@ final class PhaseSignaler: PhaseSignalSink {
 
     func phaseCompleted(_ completion: PhaseCompletion) {
         let preferences = settings.preferences
-        let sound = preferences.endSound(after: completion.phase)
+        let sound = settings.endSoundToPlay(after: completion.phase)
         if let sound {
             soundPlayer.play(sound, volume: preferences.volume)
         }

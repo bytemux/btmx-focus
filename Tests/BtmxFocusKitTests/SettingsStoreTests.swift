@@ -48,6 +48,38 @@ struct SettingsStoreTests {
         #expect(player.played.isEmpty)
     }
 
+    /// The Focus status permission is asked for only when the user wants it.
+    @Test func turningOnSilentDuringFocusAsksToReadTheFocusStatus() {
+        let focus = FakeFocusStatus()
+        let store = SettingsStore(defaults: freshDefaults().defaults, focusStatus: focus)
+        store.preferences.volume = 0.5
+        #expect(focus.accessRequests == 0)
+
+        store.preferences.silentDuringFocus = true
+        store.preferences.silentDuringFocus = false
+
+        #expect(focus.accessRequests == 1)
+    }
+
+    /// Shown only in a build that can read the Focus status (ADR 0014).
+    @Test func silentDuringFocusIsOfferedOnlyWhenTheFocusStatusCanBeRead() {
+        let defaults = freshDefaults().defaults
+        #expect(SettingsStore(defaults: defaults, focusStatus: FakeFocusStatus()).canSilenceDuringFocus == false)
+        #expect(SettingsStore(defaults: defaults, focusStatus: FakeFocusStatus(isAvailable: true))
+            .canSilenceDuringFocus == true)
+    }
+
+    @Test func endSoundStaysSilentWhileAFocusModeIsOn() {
+        let focus = FakeFocusStatus()
+        let store = SettingsStore(defaults: freshDefaults().defaults, focusStatus: focus)
+        store.preferences.silentDuringFocus = true
+
+        focus.isFocusActive = true
+        #expect(store.endSoundToPlay(after: .focus) == nil)
+        focus.isFocusActive = false
+        #expect(store.endSoundToPlay(after: .focus) == "Glass")
+    }
+
     @Test func releasingTheVolumeSliderPreviewsAnEndSoundAtTheNewVolume() {
         let player = RecordingSoundPlayer()
         let store = SettingsStore(defaults: freshDefaults().defaults, soundPlayer: player)
