@@ -1,3 +1,5 @@
+<img src="docs/images/icon.png" alt="The btmx-focus icon: a long italic ƒ over a red progress ring" width="128">
+
 # btmx-focus
 
 A native macOS menu-bar focus timer: 30 minutes of focus, 5 minutes of rest, one click away.
