@@ -31,8 +31,10 @@ scene isn't available without moving to a SwiftUI `App`.
   of `Form`s, consistent with ADR 0002. One instance, created on first open
   and reused; its frame is autosaved. Opening it closes the popover,
   activates the app (no Dock icon) and makes the window key.
-- Launch at login (planned) will not be stored: its checkbox will read
-  `SMAppService` live.
+- Launch at login is not stored: `LaunchAtLogin` (in `BtmxFocusKit`) reads
+  `SMAppService.mainApp.status` live, re-read when the Settings window opens
+  and whenever the app becomes active, so it follows System Settings → Login
+  Items. Tests inject a fake login-item service.
 
 ## Consequences
 

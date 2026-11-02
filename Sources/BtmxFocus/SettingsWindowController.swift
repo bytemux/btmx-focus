@@ -8,6 +8,7 @@ import SwiftUI
 @MainActor
 final class SettingsWindowController {
     private let settings: SettingsStore
+    private let launchAtLogin = LaunchAtLogin()
     private var window: NSWindow?
 
     init(settings: SettingsStore) {
@@ -24,12 +25,13 @@ final class SettingsWindowController {
         CrashLog.record("settings open")
         let window = window ?? makeWindow()
         self.window = window
+        launchAtLogin.refresh()
         NSApp.activate()
         window.makeKeyAndOrderFront(nil)
     }
 
     private func makeWindow() -> NSWindow {
-        let controller = NSHostingController(rootView: SettingsView(settings: settings))
+        let controller = NSHostingController(rootView: SettingsView(settings: settings, launchAtLogin: launchAtLogin))
         controller.sizingOptions = .preferredContentSize
         let window = NSWindow(contentViewController: controller)
         window.title = String(localized: "btmx-focus Settings")
