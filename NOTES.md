@@ -1,1 +1,0 @@
-- i dont want log to grow infinitely, it should tail or and reset on app start
