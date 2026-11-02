@@ -56,4 +56,17 @@ struct StatusItemPresentationTests {
         #expect(presentation.symbolName == "pause.circle")
         #expect(presentation.runningColor == nil)
     }
+
+    @Test func runningDrawsAProgressRingOtherStatesTheSymbol() {
+        let running = StatusItemPresentation(
+            engine: TimerEngine(state: .running(.focus, endDate: t0 + 1350)), preferences: Preferences(), now: t0
+        )
+        #expect(running.ringProgress == 0.25)
+
+        let paused = StatusItemPresentation(
+            engine: TimerEngine(state: .paused(.focus, remaining: .seconds(1350))), preferences: Preferences(), now: t0
+        )
+        #expect(paused.ringProgress == nil)
+        #expect(StatusItemPresentation(engine: TimerEngine(), preferences: Preferences(), now: t0).ringProgress == nil)
+    }
 }

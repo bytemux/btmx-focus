@@ -103,6 +103,14 @@ public struct TimerEngine: Sendable, Equatable {
         }
     }
 
+    /// How much of the current phase has elapsed, from 0 (Ready) to 1 (at the
+    /// deadline). The progress ring shows the rest, `1 - progress`.
+    public func progress(at now: Date) -> Double {
+        let total = schedule.duration(of: state.phase).timeInterval
+        guard total > 0 else { return 0 }
+        return min(1, max(0, 1 - remaining(at: now).timeInterval / total))
+    }
+
     /// The next instant the displayed whole-second value changes (or the
     /// phase ends), or `nil` when the clock isn't moving. With
     /// `secondsVisible: false` (nobody can see the display) only the phase end

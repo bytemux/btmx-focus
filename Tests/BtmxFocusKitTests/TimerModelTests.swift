@@ -32,6 +32,17 @@ struct TimerModelTests {
         #expect(harness.model.clockText == "24:13")
     }
 
+    @Test func progressFillsWithTheClockAndHoldsWhilePaused() async {
+        let harness = TimerHarness()
+        #expect(harness.model.progress == 0)
+        harness.model.play()
+        await harness.clock.advance(by: 900)
+        #expect(harness.model.progress == 0.5)
+        harness.model.pause()
+        await harness.clock.advance(by: 600)
+        #expect(harness.model.progress == 0.5)
+    }
+
     @Test func phaseEndSignalsOnceAndLoadsTheNextPhaseInReady() async {
         let harness = TimerHarness()
         harness.model.play()

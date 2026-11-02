@@ -25,7 +25,7 @@ struct SnapshotTests {
         // the test process's real defaults.
         let view = PopoverView(model: harness.model, openSettings: {})
             .defaultAppStorage(freshDefaults().defaults)
-        assertSnapshot(of: view, size: CGSize(width: 240, height: 226), named: state.rawValue)
+        assertSnapshot(of: view, size: CGSize(width: 240, height: 312), named: state.rawValue)
     }
 
     /// Each tab's content without the tab bar, which offscreen rendering
@@ -41,6 +41,7 @@ struct SnapshotTests {
     @Test(arguments: [
         ("ready", TimerState.ready(.focus)),
         ("running", .running(.focus, endDate: TimerHarness.t0 + 1453)),
+        ("runningRest", .running(.rest, endDate: TimerHarness.t0 + 75)),
     ])
     func statusItem(name: String, state: TimerState) {
         let presentation = StatusItemPresentation(
