@@ -16,6 +16,7 @@ public enum AccessibilityID {
 
     /// Items of the popover's `⋯` menu.
     public enum MoreMenu {
+        public static let about = "btmx.more.about"
         public static let settings = "btmx.more.settings"
         public static let debugLogging = "btmx.more.debugLogging"
         public static let showLogs = "btmx.more.showLogs"

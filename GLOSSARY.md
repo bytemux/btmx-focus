@@ -145,7 +145,7 @@ remaining time and the timer controls.
 _Avoid_: window, dropdown, main window
 
 **More menu**:
-The `⋯` menu in the popover, holding the app actions (Settings, Debug
+The `⋯` menu in the popover, holding the app actions (About, Settings, Debug
 Logging, Show Logs in Finder, Quit).
 _Avoid_: overflow menu, gear menu
 
