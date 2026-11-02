@@ -3,6 +3,8 @@
 // PNGs into the Icon Composer icon, whose icon.json stacks them on the
 // background and adds the Liquid Glass; `scripts/build-app.sh` compiles it.
 //   swift scripts/make-icon.swift Support/AppIcon.icon/Assets
+// The menu-bar logo (Sources/BtmxFocusKit/MenuBarLogo.swift) repeats this
+// geometry; change both together.
 import AppKit
 
 let assets = URL(fileURLWithPath: CommandLine.arguments[1])

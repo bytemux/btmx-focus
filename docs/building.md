@@ -46,7 +46,8 @@ the popover. Quit from the `⋯` menu in the popover.
 The icon is an Icon Composer icon, `Support/AppIcon.icon`: `icon.json`
 stacks the layers in `Assets/` on the background and adds the Liquid Glass,
 and the build compiles it with `actool`. `scripts/make-icon.swift` draws the
-layers; rerun it after changing the drawing. Open the `.icon` in Icon
+layers; rerun it after changing the drawing, and change the menu-bar
+logo (`MenuBarLogo`) to match. Open the `.icon` in Icon
 Composer (Xcode → Open Developer Tool) to tune the glass, then build.
 
 The script stamps the git commit into the bundle's Info.plist

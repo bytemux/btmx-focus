@@ -2,12 +2,18 @@ import AppKit
 import BtmxFocusCore
 
 /// What the menu-bar item shows for a timer at a given moment: the time, the
-/// icon (an SF Symbol, or the progress ring while Running), the running
-/// colour and the VoiceOver label.
+/// icon (the logo, an SF Symbol, or the progress ring while Running), the
+/// running colour and the VoiceOver label.
 public struct StatusItemPresentation: Equatable {
+    public enum Icon: Equatable {
+        /// The app icon's ring and ƒ (`MenuBarLogo`).
+        case logo
+        case symbol(String)
+    }
+
     /// `mm:ss`, or `nil` for icon only.
     public let text: String?
-    public let symbolName: String
+    public let icon: Icon
     /// Red while focusing, green while resting; `nil` means the default
     /// template look (follows the menu bar's white/gray).
     public let runningColor: NSColor?
@@ -24,21 +30,21 @@ public struct StatusItemPresentation: Equatable {
         // still shows the running colour.
         let isReady = if case .ready = state { true } else { false }
         text = isReady || !preferences.showTimerInMenuBar ? nil : ClockFormat.string(for: remaining)
-        symbolName = Self.symbolName(for: state)
+        icon = Self.icon(for: state)
         runningColor = Self.runningColor(for: state)
         ringProgress = if case .running = state { engine.progress(at: now) } else { nil }
         accessibilityLabel = PhaseStyle.accessibilityLabel(state: state, remaining: remaining)
     }
 
-    /// Ready shows the outline symbol, running the filled one, so a glance
-    /// tells whether the clock is moving.
-    private static func symbolName(for state: TimerState) -> String {
+    /// Ready shows the logo or the outline symbol, running the filled one, so
+    /// a glance tells whether the clock is moving.
+    private static func icon(for state: TimerState) -> Icon {
         switch state {
-        case .ready(.focus): "timer.circle"
-        case .running(.focus, _): "timer.circle.fill"
-        case .ready(.rest), .ready(.longRest): "cup.and.saucer"
-        case .running(.rest, _), .running(.longRest, _): "cup.and.saucer.fill"
-        case .paused: "pause.circle"
+        case .ready(.focus): .logo
+        case .running(.focus, _): .symbol("timer.circle.fill")
+        case .ready(.rest), .ready(.longRest): .symbol("cup.and.saucer")
+        case .running(.rest, _), .running(.longRest, _): .symbol("cup.and.saucer.fill")
+        case .paused: .symbol("pause.circle")
         }
     }
 
@@ -56,6 +62,11 @@ public extension StatusItemPresentation {
     var image: NSImage? {
         if let ringProgress, let runningColor {
             return ProgressRing.menuBarImage(progress: ringProgress, color: runningColor)
+        }
+        let symbolName: String
+        switch icon {
+        case .logo: return MenuBarLogo.image
+        case let .symbol(name): symbolName = name
         }
         guard let image = NSImage(systemSymbolName: symbolName, accessibilityDescription: nil) else { return nil }
         guard let color = runningColor else {
