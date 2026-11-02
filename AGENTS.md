@@ -24,14 +24,13 @@ and tell the user; don't work around it.
 `swift test` always. The E2E suite (`scripts/e2e.sh`) and `focus-drive`
 take over the user's mouse and keyboard, so run them **only when the user
 asks** (typically before a release), and say so before starting. Afterwards
-review the screenshots it saves (`build/e2e/<timestamp>/`). Don't use
-computer use or your own screenshots. Otherwise verify with `swift test`, a
-clean build and the logs, and tell the user what to check by hand
+review the screenshots it saves (`build/e2e/<timestamp>/`). To look at the
+running UI, use `focus-drive`. Otherwise verify with `swift test`, a clean
+build and the logs, and tell the user what to check by hand
 (`docs/building.md`).
 
-The E2E suite covers the critical path only (ADR 0010). Don't add an E2E
-test per button or edge case; cover those in unit or snapshot tests, and
-extend an existing E2E flow rather than adding a launch.
+The E2E suite covers the critical path only (ADR 0010): extend its two
+flows, and cover buttons and edge cases in unit or snapshot tests.
 
 ## Agent skills
 

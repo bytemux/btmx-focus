@@ -64,7 +64,17 @@ opens it. Nothing is written there during normal use.
 - macOS's own report with the stack trace:
   `~/Library/Logs/DiagnosticReports/btmx-focus-*.ips`.
 
-Live stream: `log stream --predicate 'subsystem == "com.btmx.focus"'`.
+The same actions go to the unified log at info level, so pass `--info` (or
+`--level info`), and call `/usr/bin/log`: in zsh a bare `log` is a shell
+builtin.
+
+```sh
+/usr/bin/log stream --level info --predicate 'subsystem == "com.btmx.focus"'
+/usr/bin/log show --last 2m --info --style compact --predicate 'subsystem == "com.btmx.focus"'
+```
+
+Add `AND processImagePath CONTAINS "E2E.app/"` to the predicate for the E2E
+build only.
 
 ### Notifications
 

@@ -16,6 +16,8 @@ usage: swift run focus-drive <command>
                    empty menu bar)
   key <keys>       press keys, e.g. space, cmd+w, escape
   shot <name>      save a checkpoint screenshot; prints its path
+  state            print who has the keyboard and any held keys/buttons
+  release          release modifier keys a run left held down
 Screenshots go to $E2E_OUTPUT_DIR or build/e2e/<timestamp>/.
 """
 
@@ -36,6 +38,13 @@ func main() throws {
             try app.attach()
             try app.quit()
         }
+    case "state":
+        if FocusApp.runningPID() != nil {
+            try app.attach()
+        }
+        print(app.inputState())
+    case "release":
+        print(app.releaseLeakedInput().map { "released \($0)" } ?? "nothing held")
     case "tree", "click", "key", "shot":
         try app.attach()
         try drive(app, command, argument: arguments.first)
