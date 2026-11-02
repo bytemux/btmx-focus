@@ -105,6 +105,19 @@ extension TimerEngineTests {
         #expect(engine.nextChangeDate(after: at(1801), secondsVisible: false) == at(1801))
         #expect(TimerEngine().nextChangeDate(after: t0, secondsVisible: false) == nil)
     }
+
+    @Test func progressIsTheElapsedFractionOfThePhase() {
+        var engine = TimerEngine()
+        #expect(engine.progress(at: t0) == 0)
+        engine.play(now: t0)
+        #expect(engine.progress(at: at(450)) == 0.25)
+        #expect(engine.progress(at: at(9999)) == 1)
+        engine.pause(now: at(1350))
+        #expect(engine.progress(at: at(9999)) == 0.75)
+
+        let rest = TimerEngine(state: .paused(.rest, remaining: .seconds(60)))
+        #expect(rest.progress(at: t0) == 0.8)
+    }
 }
 
 struct ClockFormatTests {
