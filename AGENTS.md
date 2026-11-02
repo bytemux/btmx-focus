@@ -20,6 +20,12 @@ Requires Xcode with its license accepted, plus SwiftLint and SwiftFormat. If
 a command fails because one is missing or the license isn't accepted, stop
 and tell the user; don't work around it.
 
+## Before implementing
+
+On `/implement` or "implement spec", start from fresh main:
+`git stash -u` if the working tree is dirty (don't ask), then
+`git switch main && git pull --ff-only`, then branch.
+
 ## Testing the UI
 
 `swift test` always. The E2E suite (`scripts/e2e.sh`) and `focus-drive`
