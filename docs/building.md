@@ -151,3 +151,12 @@ app:
     turning it on asks once to read the Focus status. With access granted
     and Do Not Disturb on, a phase end plays no sound; with Do Not Disturb
     off, or the option off, it does.
+11. Settings → General: with "Auto-start timer" on, a phase end plays the
+    sound and the next phase is already running (E2E app with
+    `--e2e-focus-seconds 5 --e2e-rest-seconds 5`; move the mouse near
+    each phase end, or idle skip takes the 5 s break). With "Skip break if
+    idle" on (default), don't touch the keyboard or mouse through a Focus
+    phase end: the app goes straight to Ready(Focus) (Running with
+    auto-start), the banner says you were away for the break, and the log
+    shows `Rest skipped (idle …)`. Touch the mouse just before the end and
+    the break comes as usual.

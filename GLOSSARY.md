@@ -90,6 +90,12 @@ An option under which the next phase starts Running at the previous phase's
 deadline instead of waiting for Play.
 _Avoid_: auto-advance, continuous mode
 
+**Idle skip**:
+At a Focus phase end, a break the user was already away for (no keyboard or
+mouse input for at least its length) counts as taken: Focus comes next.
+Set by "Skip break if idle"; checked only at that moment.
+_Avoid_: away mode, auto-skip
+
 **Daily target**:
 The number of Focus intervals the user aims for in a day, shown as
 "Today n/target".

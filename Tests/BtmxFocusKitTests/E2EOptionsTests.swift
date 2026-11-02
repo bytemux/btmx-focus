@@ -16,6 +16,7 @@ struct E2EOptionsTests {
         #expect(options.notificationsEnabled)
         #expect(!options.debugLogging)
         #expect(!options.resetSettings)
+        #expect(options.phaseEnd(from: Preferences()) == Preferences().phaseEnd)
     }
 
     @Test func readsEveryArgument() throws {
@@ -26,6 +27,7 @@ struct E2EOptionsTests {
             E2EContract.Argument.noNotifications,
             E2EContract.Argument.debugLogging,
             E2EContract.Argument.resetSettings,
+            E2EContract.Argument.noIdleSkip,
         ]
         let options = try #require(E2EOptions(arguments: arguments, bundleIdentifier: E2EContract.bundleIdentifier))
         #expect(options.schedule(from: Preferences()) == Schedule(
@@ -34,6 +36,9 @@ struct E2EOptionsTests {
         #expect(!options.notificationsEnabled)
         #expect(options.debugLogging)
         #expect(options.resetSettings)
+        var preferences = Preferences()
+        preferences.autoStart = true
+        #expect(options.phaseEnd(from: preferences) == PhaseEndOptions(autoStart: true, skipBreakIfIdle: false))
     }
 
     /// The seconds win over the Settings' minutes; the rest follows Settings.

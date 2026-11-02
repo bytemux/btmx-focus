@@ -11,6 +11,7 @@ public struct E2EOptions: Equatable, Sendable {
     public var notificationsEnabled = true
     public var debugLogging = false
     public var resetSettings = false
+    public var idleSkipEnabled = true
 
     /// `nil` unless `bundleIdentifier` is the E2E build's.
     public init?(arguments: [String], bundleIdentifier: String?) {
@@ -26,6 +27,7 @@ public struct E2EOptions: Equatable, Sendable {
         notificationsEnabled = !arguments.contains(argument.noNotifications)
         debugLogging = arguments.contains(argument.debugLogging)
         resetSettings = arguments.contains(argument.resetSettings)
+        idleSkipEnabled = !arguments.contains(argument.noIdleSkip)
     }
 
     /// The Settings' schedule with the E2E lengths in place of theirs.
@@ -34,6 +36,13 @@ public struct E2EOptions: Equatable, Sendable {
         schedule.focus = focusLength ?? schedule.focus
         schedule.rest = restLength ?? schedule.rest
         return schedule
+    }
+
+    /// The Settings' phase-end options, without idle skip if turned off here.
+    public func phaseEnd(from preferences: Preferences) -> PhaseEndOptions {
+        var options = preferences.phaseEnd
+        options.skipBreakIfIdle = options.skipBreakIfIdle && idleSkipEnabled
+        return options
     }
 
     /// This process's options. Always `nil` in release builds.

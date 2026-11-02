@@ -14,10 +14,15 @@ public struct PhaseNotification: Equatable, Sendable {
         case .rest: String(localized: "Break over")
         case .longRest: String(localized: "Long break over")
         }
-        body = switch completion.next {
+        let next = switch completion.next {
         case .focus: String(localized: "Ready for \(length) of focus.")
         case .rest: String(localized: "Time for a \(length) break.")
         case .longRest: String(localized: "Time for a \(length) long break.")
+        }
+        body = switch completion.skippedBreak {
+        case nil: next
+        case .longRest: String(localized: "You were away for the long break. \(next)")
+        case .focus, .rest: String(localized: "You were away for the break. \(next)")
         }
     }
 

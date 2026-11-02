@@ -258,3 +258,64 @@ struct ScheduleChangeTests {
         #expect(engine.state == .ready(.longRest))
     }
 }
+
+struct PhaseEndOptionsTests {
+    @Test func autoStartChainsTheNextPhaseFromThePreviousDeadline() {
+        var engine = TimerEngine(schedule: shortSchedule, phaseEnd: PhaseEndOptions(autoStart: true))
+        engine.play(now: t0)
+        // The tick lands a little late; the next phase still starts at the deadline.
+        #expect(engine.tick(now: at(60.4)) == .phaseCompleted(
+            PhaseCompletion(phase: .focus, next: .rest, nextDuration: .seconds(10))
+        ))
+        #expect(engine.state == .running(.rest, endDate: at(70)))
+        #expect(engine.tick(now: at(70)) == .phaseCompleted(
+            PhaseCompletion(phase: .rest, next: .focus, nextDuration: .seconds(60))
+        ))
+        #expect(engine.state == .running(.focus, endDate: at(130)))
+    }
+
+    /// Short break 10 s, long break 30 s, every second Focus.
+    @Test(arguments: [
+        (0, 9.9, false),
+        (0, 10, true),
+        (1, 29.9, false),
+        (1, 30, true),
+    ])
+    func idleForTheComingBreakSkipsIt(focusDone: Int, idleSeconds: Double, skips: Bool) {
+        var engine = TimerEngine(schedule: shortSchedule, phaseEnd: PhaseEndOptions(skipBreakIfIdle: true))
+        for _ in 0 ..< focusDone {
+            _ = complete(&engine, at: t0)
+            engine.skip()
+        }
+        let comingBreak: Phase = focusDone == 1 ? .longRest : .rest
+        engine.play(now: t0)
+        let event = engine.tick(now: at(60), idleTime: .seconds(idleSeconds))
+        if skips {
+            #expect(event == .phaseCompleted(PhaseCompletion(
+                phase: .focus, next: .focus, nextDuration: .seconds(60), skippedBreak: comingBreak
+            )))
+            #expect(engine.state == .ready(.focus))
+        } else {
+            #expect(event == .phaseCompleted(PhaseCompletion(
+                phase: .focus, next: comingBreak, nextDuration: engine.schedule.duration(of: comingBreak)
+            )))
+            #expect(engine.state == .ready(comingBreak))
+        }
+    }
+
+    @Test func idleDoesNotSkipTheBreakWhenTheOptionIsOff() {
+        var engine = TimerEngine(schedule: shortSchedule)
+        engine.play(now: t0)
+        _ = engine.tick(now: at(60), idleTime: .seconds(3600))
+        #expect(engine.state == .ready(.rest))
+    }
+
+    @Test func idleSkipWithAutoStartRunsFocusFromTheDeadline() {
+        var engine = TimerEngine(
+            schedule: shortSchedule, phaseEnd: PhaseEndOptions(autoStart: true, skipBreakIfIdle: true)
+        )
+        engine.play(now: t0)
+        _ = engine.tick(now: at(60.5), idleTime: .seconds(600))
+        #expect(engine.state == .running(.focus, endDate: at(120)))
+    }
+}

@@ -185,6 +185,31 @@ struct TimerModelTests {
         #expect(harness.signaler.authorizationRequests == 1)
     }
 
+    @Test func awayThroughAFocusEndGoesStraightToFocus() async {
+        let harness = TimerHarness()
+        harness.model.setPhaseEnd(PhaseEndOptions(skipBreakIfIdle: true))
+        harness.model.play()
+        await harness.clock.advance(by: 1700)
+        harness.clock.idleTime = .seconds(5 * 60)
+        await harness.clock.advance(by: 100)
+        #expect(harness.signaler.completions == [PhaseCompletion(
+            phase: .focus, next: .focus, nextDuration: .seconds(1800), skippedBreak: .rest
+        )])
+        #expect(harness.model.state == .ready(.focus))
+    }
+
+    @Test func autoStartKeepsTheCycleRunning() async {
+        let harness = TimerHarness()
+        harness.model.setPhaseEnd(PhaseEndOptions(autoStart: true))
+        harness.model.play()
+        await harness.clock.advance(by: 1800)
+        #expect(harness.model.state == .running(.rest, endDate: t0 + 2100))
+        await harness.clock.advance(by: 300)
+        #expect(harness.signaler.completedPhases == [.focus, .rest])
+        #expect(harness.model.state == .running(.focus, endDate: t0 + 3900))
+        #expect(harness.model.clockText == "30:00")
+    }
+
     @Test func completedFocusIntervalsCountTowardsToday() async {
         let harness = TimerHarness()
         #expect(harness.model.todayCount == 0)

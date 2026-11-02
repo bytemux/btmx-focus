@@ -51,6 +51,11 @@ public extension Preferences {
             longRestEvery: longRestEvery
         )
     }
+
+    /// The General tab's phase-end options, for the engine.
+    var phaseEnd: PhaseEndOptions {
+        PhaseEndOptions(autoStart: autoStart, skipBreakIfIdle: skipBreakIfIdle)
+    }
 }
 
 /// One `UserDefaults` key per setting, named after the property. Missing keys
