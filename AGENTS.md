@@ -1,6 +1,7 @@
 # btmx-focus
 
-Native macOS menu-bar focus timer. Spec: `docs/spec.md`. ADRs: `docs/adr/`.
+Native macOS menu-bar focus timer. Language: `GLOSSARY.md`. Decisions:
+`docs/adr/`. Planned work: GitHub Issues.
 Build, run, logs: `docs/building.md`. Tests: `docs/testing.md`.
 
 ## Commands
