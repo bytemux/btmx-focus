@@ -1,3 +1,4 @@
+import BtmxFocusCore
 import BtmxFocusUIContract
 import SwiftUI
 
@@ -51,11 +52,44 @@ public struct SettingsTabContent: View {
                 Toggle("Show timer in menu bar", isOn: $settings.preferences.showTimerInMenuBar)
                     .accessibilityIdentifier(AccessibilityID.Settings.showTimerInMenuBar)
                 launchAtLoginToggle
-            case .intervals, .notificationsAndSounds:
+            case .notificationsAndSounds:
+                notificationsAndSounds
+            case .intervals:
                 EmptyView()
             }
         }
         .formStyle(.grouped)
+    }
+
+    @ViewBuilder private var notificationsAndSounds: some View {
+        endSoundPicker("Work completed sound", after: .focus, identifier: AccessibilityID.Settings.focusEndSound)
+        endSoundPicker("End break sound", after: .rest, identifier: AccessibilityID.Settings.breakEndSound)
+        Slider(value: $settings.preferences.volume, in: 0 ... 1) {
+            Text("Notification sound level")
+        } minimumValueLabel: {
+            Image(systemName: "speaker.fill")
+        } maximumValueLabel: {
+            Image(systemName: "speaker.wave.3.fill")
+        } onEditingChanged: { editing in
+            if !editing {
+                settings.volumeSliderReleased()
+            }
+        }
+        .accessibilityIdentifier(AccessibilityID.Settings.volume)
+        Toggle("Completion notifications", isOn: $settings.preferences.completionNotifications)
+            .accessibilityIdentifier(AccessibilityID.Settings.completionNotifications)
+    }
+
+    private func endSoundPicker(_ title: LocalizedStringKey, after phase: Phase, identifier: String) -> some View {
+        Picker(title, selection: Binding(
+            get: { settings.preferences.endSound(after: phase) ?? "" },
+            set: { settings.pickEndSound($0, after: phase) }
+        )) {
+            Text("None").tag("")
+            Divider()
+            ForEach(SystemSound.names, id: \.self) { Text($0).tag($0) }
+        }
+        .accessibilityIdentifier(identifier)
     }
 
     private var launchAtLoginToggle: some View {

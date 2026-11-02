@@ -77,6 +77,28 @@ public final class RecordingSignaler: PhaseSignalSink {
     }
 }
 
+/// Records the sounds it is asked to play instead of playing them.
+@MainActor
+public final class RecordingSoundPlayer: SoundPlayer {
+    public struct Played: Equatable, Sendable {
+        public let name: String
+        public let volume: Double
+
+        public init(name: String, volume: Double) {
+            self.name = name
+            self.volume = volume
+        }
+    }
+
+    public private(set) var played: [Played] = []
+
+    public init() {}
+
+    public func play(_ name: String, volume: Double) {
+        played.append(Played(name: name, volume: volume))
+    }
+}
+
 /// A login-item service whose status is whatever the test sets.
 public final class FakeLoginItemService: LoginItemService {
     public var status: SMAppService.Status

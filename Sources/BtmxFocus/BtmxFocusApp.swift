@@ -57,11 +57,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationDidFinishLaunching(_: Notification) {
+        let settings = SettingsStore()
         let model = TimerModel(
             engine: TimerEngine(schedule: e2e?.schedule ?? .standard),
-            signaler: PhaseSignaler(notificationsEnabled: e2e?.notificationsEnabled ?? true)
+            signaler: PhaseSignaler(settings: settings, notificationsEnabled: e2e?.notificationsEnabled ?? true)
         )
-        let settings = SettingsStore()
         statusItemController = StatusItemController(
             model: model, settings: settings, settingsWindow: SettingsWindowController(settings: settings)
         )

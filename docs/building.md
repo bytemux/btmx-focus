@@ -80,7 +80,9 @@ build only.
 
 The first time you press Play, macOS asks for permission to show
 notifications. If you deny it, the end-of-phase sound still plays. Change it
-later in System Settings → Notifications → btmx-focus.
+later in System Settings → Notifications → btmx-focus. With Completion
+notifications off (Settings → Notifications & Sounds) nothing is posted and
+permission isn't asked for.
 
 The app is ad-hoc signed, so after a rebuild macOS may treat it as a new app
 and ask again.
@@ -137,3 +139,8 @@ app:
    out and in, the app is in the menu bar. Removing it in System Settings →
    Login Items un-ticks the box when you come back; "requires approval"
    shows a note and an "Open Login Items" button.
+9. Settings → Notifications & Sounds: picking a sound in either picker plays
+   it ("None" plays nothing); releasing the volume slider plays the sound at
+   that volume, and a phase end then plays at that volume too; with
+   Completion notifications off a phase end shows no banner, and on a fresh
+   install (`tccutil reset All com.btmx.focus`) the first ▶ asks nothing.

@@ -20,6 +20,27 @@ struct PreferencesTests {
         #expect(preferences.volume == 1.0)
     }
 
+    @Test func focusAndBreakEndWithDifferentSoundsByDefault() {
+        let preferences = Preferences()
+        #expect(preferences.endSound(after: .focus) == "Glass")
+        #expect(preferences.endSound(after: .rest) == "Hero")
+    }
+
+    @Test func soundNoneMeansNoEndSound() {
+        var preferences = Preferences()
+        preferences.focusEndSound = ""
+        preferences.breakEndSound = "Ping"
+        #expect(preferences.endSound(after: .focus) == nil)
+        #expect(preferences.endSound(after: .rest) == "Ping")
+    }
+
+    @Test func soundPickerListsTheBuiltInSounds() {
+        #expect(SystemSound.names == [
+            "Basso", "Blow", "Bottle", "Frog", "Funk", "Glass", "Hero",
+            "Morse", "Ping", "Pop", "Purr", "Sosumi", "Submarine", "Tink",
+        ])
+    }
+
     @Test func emptyDefaultsLoadTheDefaults() {
         #expect(Preferences(defaults: freshDefaults()) == Preferences())
     }
