@@ -36,3 +36,4 @@ Taken from [spec §5](../spec.md#5-technical-approach):
 | 0007 | End-of-phase signals: notification + `NSSound`          | Planned |
 | [0008](0008-settings-in-userdefaults-through-preferences.md) | Settings in `UserDefaults` through `Preferences` | Accepted |
 | [0009](0009-xcode-swift-testing-and-snapshot-tests.md) | SwiftPM package built with Xcode; Swift Testing + snapshot tests | Accepted |
+| [0010](0010-e2e-tests-through-accessibility-and-real-input.md) | E2E tests drive the bundled app through Accessibility and real input | Accepted |

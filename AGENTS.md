@@ -10,6 +10,7 @@ Run `swift test` after every change.
 ```sh
 swift test                                   # unit + snapshot tests
 SNAPSHOT_RECORD=1 swift test                 # re-record snapshots
+scripts/e2e.sh                               # E2E: only when the user asks (takes the mouse)
 scripts/build-app.sh && open build/btmx-focus.app
 swiftformat . && swiftlint
 ```
@@ -20,10 +21,17 @@ and tell the user; don't work around it.
 
 ## Testing the UI
 
-Do not use computer use, screenshots or screen recording. Verify what you
-can with `swift test` (including the snapshot tests), a clean build and the
-logs (`crash-*.log`, and `breadcrumbs.log` with Debug Logging on). Then hand
-over to the user, who tests the UI by hand, and say what to look for.
+`swift test` always. The E2E suite (`scripts/e2e.sh`) and `focus-drive`
+take over the user's mouse and keyboard, so run them **only when the user
+asks** (typically before a release), and say so before starting. Afterwards
+review the screenshots it saves (`build/e2e/<timestamp>/`). Don't use
+computer use or your own screenshots. Otherwise verify with `swift test`, a
+clean build and the logs, and tell the user what to check by hand
+(`docs/building.md`).
+
+The E2E suite covers the critical path only (ADR 0010). Don't add an E2E
+test per button or edge case; cover those in unit or snapshot tests, and
+extend an existing E2E flow rather than adding a launch.
 
 ## Agent skills
 

@@ -1,5 +1,6 @@
 import AppKit
 import BtmxFocusKit
+import BtmxFocusUIContract
 import Observation
 import SwiftUI
 
@@ -37,6 +38,7 @@ final class StatusItemController: NSObject {
         if let button = statusItem.button {
             button.target = self
             button.action = #selector(togglePopover)
+            button.setAccessibilityIdentifier(AccessibilityID.statusItem)
         }
         render()
     }
@@ -55,16 +57,24 @@ final class StatusItemController: NSObject {
         anchorWindow.orderFront(nil)
         // Content exists only while shown, so a closed popover never redraws.
         popover.contentViewController = NSHostingController(
-            rootView: PopoverView(model: model, openSettings: { [weak self] in self?.openSettings() })
+            rootView: PopoverView(
+                model: model,
+                openSettings: { [weak self] in self?.openSettings() },
+                close: { [weak self] in self?.popover.performClose(nil) }
+            )
         )
-        NSApp.activate()
+        // The plain NSApp.activate() is only a request, and macOS 27 turns it
+        // down for a status-item click: the popover would open without keyboard
+        // focus (no Space, no Esc) and wouldn't close on clicks elsewhere.
+        NSApp.activate(ignoringOtherApps: true)
         popover.show(relativeTo: anchor.bounds, of: anchor, preferredEdge: .minY)
         popover.contentViewController?.view.window?.makeKey()
     }
 
+    /// Settings first, so the popover's close doesn't hand the keyboard away.
     private func openSettings() {
-        popover.performClose(nil)
         settingsWindow.show()
+        popover.performClose(nil)
     }
 
     /// The icon's frame in screen coordinates; it sits at the item's trailing edge.
@@ -96,5 +106,10 @@ extension StatusItemController: NSPopoverDelegate {
         lastClose = Date()
         anchorWindow.orderOut(nil)
         popover.contentViewController = nil
+        // Give the keyboard back to the app the user came from, unless they
+        // went on to Settings.
+        if !settingsWindow.isVisible {
+            NSApp.hide(nil)
+        }
     }
 }

@@ -15,7 +15,12 @@ Tests/BtmxFocusCoreTests/  Swift Testing tests for the engine
 Tests/BtmxFocusKitTests/   app-layer unit tests
 Tests/BtmxFocusSnapshotTests/  snapshot tests + reference images
 Support/                   Info.plist + entitlements for the .app bundle
-scripts/build-app.sh       builds build/btmx-focus.app
+Sources/BtmxFocusUIContract/  accessibility ids + E2E launch arguments
+Sources/BtmxFocusDriver/   E2E driver (Accessibility + real input)
+Sources/FocusDrive/        focus-drive CLI on the driver
+Tests/BtmxFocusE2ETests/   E2E suite (runs only with E2E=1)
+scripts/build-app.sh       builds build/btmx-focus.app (or the E2E app)
+scripts/e2e.sh             builds the E2E app and runs the E2E suite
 ```
 
 ## Requirements
@@ -38,7 +43,8 @@ open build/btmx-focus.app
 The app appears in the menu bar only (no Dock icon). Click the item to open
 the popover. Quit from the `⋯` menu in the popover.
 
-For a debug build: `scripts/build-app.sh debug`.
+For a debug build: `scripts/build-app.sh debug`. `scripts/build-app.sh e2e`
+builds `build/btmx-focus E2E.app` for the E2E tests (`docs/testing.md`).
 
 To rebuild while the app is running, quit it first (`⋯` → Quit, or
 `osascript -e 'quit app "btmx-focus"'`). macOS allows only one instance.
@@ -101,16 +107,17 @@ tests and run the `BtmxFocus` scheme. Running from Xcode works like
 
 ## Manual MVP check
 
-Against spec §7, with the bundled app:
+Before a release, run `scripts/e2e.sh` for the critical path
+(`docs/testing.md`). What it doesn't cover, check by hand with the bundled
+app:
 
-1. Menu bar shows the focus icon only (no time); no Dock icon.
-2. Popover: "Focus", `30:00`, ▶ under the time.
-3. ▶ shows `29:59` to the left of the icon without the icon moving; the
-   icon turns red (green during rest). ❚❚ pauses it and the icon goes back
-   to gray; ▶ resumes.
-4. Skip → Ready(Rest) `05:00`, no sound. Reset → Ready(Focus) `30:00`.
-5. Phase end: a notification, the Glass sound (after focus) or Hero (after
-   rest), and the next phase waits at full length with ▶. To check this
-   without waiting 30 minutes, temporarily change `Schedule.standard` in
-   `Sources/BtmxFocusCore/TimerEngine.swift` to a few seconds and rebuild.
-6. Sleep the Mac (Apple menu → Sleep), wake it: Ready(Focus) `30:00`.
+1. No Dock icon.
+2. ▶ shows the time to the left of the icon without the icon moving.
+3. Clicking elsewhere closes the popover; Settings' three tabs switch; ⌘W
+   closes Settings and `⋯` → Settings… brings the same window back.
+4. Sleep the Mac (Apple menu → Sleep), wake it: Ready(Focus) `30:00`.
+5. The first ▶ asks for notification permission.
+6. Phase end: a notification banner, and the Glass sound (after focus) or
+   Hero (after rest). To check this without waiting 30 minutes, launch the
+   E2E app with a short schedule:
+   `open "build/btmx-focus E2E.app" --args --e2e-focus-seconds 5 --e2e-rest-seconds 5`.

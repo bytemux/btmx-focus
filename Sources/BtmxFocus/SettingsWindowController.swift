@@ -1,5 +1,6 @@
 import AppKit
 import BtmxFocusKit
+import BtmxFocusUIContract
 import SwiftUI
 
 /// The one Settings window: AppKit `NSWindow` hosting SwiftUI (ADR 0002,
@@ -11,6 +12,10 @@ final class SettingsWindowController {
 
     init(settings: SettingsStore) {
         self.settings = settings
+    }
+
+    var isVisible: Bool {
+        window?.isVisible ?? false
     }
 
     /// Brings the window to the front with focus. The app has no Dock icon,
@@ -30,6 +35,7 @@ final class SettingsWindowController {
         window.title = String(localized: "btmx-focus Settings")
         window.styleMask = [.titled, .closable]
         window.isReleasedWhenClosed = false
+        window.setAccessibilityIdentifier(AccessibilityID.Settings.window)
         let autosaveName = "Settings"
         if !window.setFrameUsingName(autosaveName) {
             window.center()
