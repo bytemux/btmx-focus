@@ -25,6 +25,7 @@ struct PreferencesTests {
         let preferences = Preferences()
         #expect(preferences.endSound(after: .focus) == "Glass")
         #expect(preferences.endSound(after: .rest) == "Hero")
+        #expect(preferences.endSound(after: .longRest) == "Hero")
     }
 
     @Test func soundNoneMeansNoEndSound() {
@@ -40,6 +41,29 @@ struct PreferencesTests {
             "Basso", "Blow", "Bottle", "Frog", "Funk", "Glass", "Hero",
             "Morse", "Ping", "Pop", "Purr", "Sosumi", "Submarine", "Tink",
         ])
+    }
+
+    @Test func intervalPresetsIncludeTheDefaults() {
+        let preferences = Preferences()
+        #expect(Preferences.focusMinuteOptions.contains(preferences.focusMinutes))
+        #expect(Preferences.shortRestMinuteOptions.contains(preferences.shortRestMinutes))
+        #expect(Preferences.longRestMinuteOptions.contains(preferences.longRestMinutes))
+        #expect(Preferences.longRestEveryOptions.contains(preferences.longRestEvery))
+        // The manual check: Focus 1 min, long break after 2.
+        #expect(Preferences.focusMinuteOptions.contains(1))
+        #expect(Preferences.longRestEveryOptions.contains(2))
+    }
+
+    @Test func scheduleFollowsTheIntervalSettings() {
+        var preferences = Preferences()
+        #expect(preferences.schedule == .standard)
+        preferences.focusMinutes = 50
+        preferences.shortRestMinutes = 10
+        preferences.longRestMinutes = 20
+        preferences.longRestEvery = 2
+        #expect(preferences.schedule == Schedule(
+            focus: .seconds(3000), rest: .seconds(600), longRest: .seconds(1200), longRestEvery: 2
+        ))
     }
 
     @Test func emptyDefaultsLoadTheDefaults() {

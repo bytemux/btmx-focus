@@ -34,13 +34,17 @@ struct TimerEngineTests {
     @Test func phaseEndLoadsNextPhaseAndWaitsForPlay() {
         var engine = TimerEngine()
         engine.play(now: t0)
-        #expect(engine.tick(now: at(1800)) == .phaseCompleted(.focus))
+        #expect(engine.tick(now: at(1800)) == .phaseCompleted(
+            PhaseCompletion(phase: .focus, next: .rest, nextDuration: .seconds(5 * 60))
+        ))
         #expect(engine.state == .ready(.rest))
         #expect(engine.remaining(at: at(5000)) == .seconds(5 * 60))
         #expect(engine.tick(now: at(5000)) == nil)
 
         engine.play(now: at(2000))
-        #expect(engine.tick(now: at(2300)) == .phaseCompleted(.rest))
+        #expect(engine.tick(now: at(2300)) == .phaseCompleted(
+            PhaseCompletion(phase: .rest, next: .focus, nextDuration: .seconds(30 * 60))
+        ))
         #expect(engine.state == .ready(.focus))
     }
 
@@ -133,5 +137,124 @@ struct ClockFormatTests {
     ])
     func formatsRoundingUp(seconds: Double, expected: String) {
         #expect(ClockFormat.string(for: .seconds(seconds)) == expected)
+    }
+}
+
+/// Completes the running or ready phase: Play, then tick at its deadline.
+private func complete(_ engine: inout TimerEngine, at now: Date) -> TimerEvent? {
+    engine.play(now: now)
+    return engine.tick(now: now + engine.remaining(at: now))
+}
+
+private let shortSchedule = Schedule(
+    focus: .seconds(60), rest: .seconds(10), longRest: .seconds(30), longRestEvery: 2
+)
+
+struct CycleTests {
+    @Test func longBreakAfterNFocusIntervalsShortRestOtherwise() {
+        var engine = TimerEngine(schedule: shortSchedule)
+        #expect(complete(&engine, at: t0) == .phaseCompleted(
+            PhaseCompletion(phase: .focus, next: .rest, nextDuration: .seconds(10))
+        ))
+        #expect(engine.state == .ready(.rest))
+        _ = complete(&engine, at: at(100))
+        #expect(complete(&engine, at: at(200)) == .phaseCompleted(
+            PhaseCompletion(phase: .focus, next: .longRest, nextDuration: .seconds(30))
+        ))
+        #expect(engine.state == .ready(.longRest))
+        #expect(engine.remaining(at: at(500)) == .seconds(30))
+        #expect(complete(&engine, at: at(300)) == .phaseCompleted(
+            PhaseCompletion(phase: .longRest, next: .focus, nextDuration: .seconds(60))
+        ))
+        // The cycle starts over: the next Focus is followed by Rest.
+        _ = complete(&engine, at: at(400))
+        #expect(engine.state == .ready(.rest))
+    }
+
+    @Test func skippedFocusDoesNotCountTowardsTheLongBreak() {
+        var engine = TimerEngine(schedule: shortSchedule)
+        _ = complete(&engine, at: t0)
+        _ = complete(&engine, at: at(100))
+        engine.play(now: at(200))
+        engine.skip()
+        #expect(engine.state == .ready(.rest))
+        engine.skip()
+        _ = complete(&engine, at: at(300))
+        #expect(engine.state == .ready(.longRest))
+    }
+
+    @Test func skipFromALongBreakLoadsFocus() {
+        var engine = TimerEngine(schedule: shortSchedule, state: .running(.longRest, endDate: at(30)))
+        engine.skip()
+        #expect(engine.state == .ready(.focus))
+    }
+
+    @Test func resetRestartsTheCycle() {
+        var engine = TimerEngine(schedule: shortSchedule)
+        _ = complete(&engine, at: t0)
+        engine.reset()
+        _ = complete(&engine, at: at(100))
+        #expect(engine.state == .ready(.rest))
+    }
+
+    @Test func longBreakEveryOneFollowsEachFocus() {
+        var schedule = shortSchedule
+        schedule.longRestEvery = 1
+        var engine = TimerEngine(schedule: schedule)
+        _ = complete(&engine, at: t0)
+        #expect(engine.state == .ready(.longRest))
+    }
+}
+
+struct ScheduleChangeTests {
+    private let longer = Schedule(
+        focus: .seconds(50 * 60), rest: .seconds(10 * 60), longRest: .seconds(20 * 60), longRestEvery: 2
+    )
+
+    @Test(arguments: [
+        (Phase.focus, Duration.seconds(50 * 60)),
+        (.rest, .seconds(10 * 60)),
+        (.longRest, .seconds(20 * 60)),
+    ])
+    func readyPhaseTakesTheNewLength(phase: Phase, expected: Duration) {
+        var engine = TimerEngine(state: .ready(phase))
+        engine.schedule = longer
+        #expect(engine.remaining(at: t0) == expected)
+        engine.play(now: t0)
+        #expect(engine.state == .running(phase, endDate: t0 + expected))
+    }
+
+    @Test func runningPhaseKeepsItsDeadline() {
+        var engine = TimerEngine()
+        engine.play(now: t0)
+        engine.schedule = longer
+        #expect(engine.state == .running(.focus, endDate: at(1800)))
+        #expect(engine.remaining(at: at(600)) == .seconds(1200))
+        // What comes next follows the new schedule.
+        #expect(engine.tick(now: at(1800)) == .phaseCompleted(
+            PhaseCompletion(phase: .focus, next: .rest, nextDuration: .seconds(10 * 60))
+        ))
+    }
+
+    @Test func pausedPhaseKeepsItsRemainingTime() {
+        var engine = TimerEngine()
+        engine.play(now: t0)
+        engine.pause(now: at(600))
+        engine.schedule = longer
+        #expect(engine.remaining(at: at(9000)) == .seconds(1200))
+        engine.play(now: at(9000))
+        #expect(engine.state == .running(.focus, endDate: at(10200)))
+    }
+
+    @Test func fewerIntervalsPerCycleGiveALongBreakAtTheNextFocusEnd() {
+        var engine = TimerEngine()
+        _ = complete(&engine, at: t0)
+        _ = complete(&engine, at: at(2000))
+        _ = complete(&engine, at: at(3000))
+        _ = complete(&engine, at: at(5000))
+        engine.schedule = longer
+        // Two Focus intervals done already reach the new cycle length.
+        _ = complete(&engine, at: at(6000))
+        #expect(engine.state == .ready(.longRest))
     }
 }

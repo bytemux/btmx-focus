@@ -5,7 +5,9 @@ import Foundation
 /// The debug launch arguments the E2E build accepts (ADR 0010). Every other
 /// build (another bundle id, or a release build) gets `nil` and ignores them.
 public struct E2EOptions: Equatable, Sendable {
-    public var schedule = Schedule.standard
+    /// Short Focus and Rest lengths that replace the Settings' minutes.
+    public var focusLength: Duration?
+    public var restLength: Duration?
     public var notificationsEnabled = true
     public var debugLogging = false
     public var resetSettings = false
@@ -19,13 +21,19 @@ public struct E2EOptions: Equatable, Sendable {
                   let value = Double(arguments[index + 1]), value > 0 else { return nil }
             return .seconds(value)
         }
-        schedule = Schedule(
-            focus: seconds(after: argument.focusSeconds) ?? Schedule.standard.focus,
-            rest: seconds(after: argument.restSeconds) ?? Schedule.standard.rest
-        )
+        focusLength = seconds(after: argument.focusSeconds)
+        restLength = seconds(after: argument.restSeconds)
         notificationsEnabled = !arguments.contains(argument.noNotifications)
         debugLogging = arguments.contains(argument.debugLogging)
         resetSettings = arguments.contains(argument.resetSettings)
+    }
+
+    /// The Settings' schedule with the E2E lengths in place of theirs.
+    public func schedule(from preferences: Preferences) -> Schedule {
+        var schedule = preferences.schedule
+        schedule.focus = focusLength ?? schedule.focus
+        schedule.rest = restLength ?? schedule.rest
+        return schedule
     }
 
     /// This process's options. Always `nil` in release builds.

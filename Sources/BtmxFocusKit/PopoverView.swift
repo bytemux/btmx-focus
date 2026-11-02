@@ -21,7 +21,7 @@ public struct PopoverView: View {
         switch model.state {
         case .paused: .secondary
         case .ready(.focus), .running(.focus, _): .red
-        case .ready(.rest), .running(.rest, _): .green
+        case .ready(.rest), .running(.rest, _), .ready(.longRest), .running(.longRest, _): .green
         }
     }
 
