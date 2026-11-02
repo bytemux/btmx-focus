@@ -18,6 +18,7 @@ struct PreferencesTests {
         #expect(preferences.focusEndSound == "Glass")
         #expect(preferences.breakEndSound == "Hero")
         #expect(preferences.volume == 1.0)
+        #expect(preferences.appearance == .auto)
     }
 
     @Test func focusAndBreakEndWithDifferentSoundsByDefault() {
@@ -61,6 +62,7 @@ struct PreferencesTests {
         preferences.focusEndSound = ""
         preferences.breakEndSound = "Ping"
         preferences.volume = 0.25
+        preferences.appearance = .dark
         preferences.save(to: defaults, changedFrom: Preferences())
 
         #expect(Preferences(defaults: defaults) == preferences)
@@ -80,6 +82,21 @@ struct PreferencesTests {
         let defaults = freshDefaults()
         defaults.set("loud", forKey: "volume")
         #expect(Preferences(defaults: defaults).volume == 1.0)
+    }
+
+    @Test func appearanceIsSavedByName() {
+        let defaults = freshDefaults()
+        var preferences = Preferences()
+        preferences.appearance = .light
+        preferences.save(to: defaults, changedFrom: Preferences())
+        #expect(defaults.string(forKey: "appearance") == "light")
+        #expect(preferences.changes(from: Preferences()) == ["appearance auto → light"])
+    }
+
+    @Test func unknownAppearanceFallsBackToAuto() {
+        let defaults = freshDefaults()
+        defaults.set("sepia", forKey: "appearance")
+        #expect(Preferences(defaults: defaults).appearance == .auto)
     }
 
     @Test func describesOnlyTheChangedSettings() {

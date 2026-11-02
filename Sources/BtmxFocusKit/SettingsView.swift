@@ -52,6 +52,12 @@ public struct SettingsTabContent: View {
                 Toggle("Show timer in menu bar", isOn: $settings.preferences.showTimerInMenuBar)
                     .accessibilityIdentifier(AccessibilityID.Settings.showTimerInMenuBar)
                 launchAtLoginToggle
+                Picker("Appearance", selection: $settings.preferences.appearance) {
+                    Text("Auto").tag(Appearance.auto)
+                    Text("Light").tag(Appearance.light)
+                    Text("Dark").tag(Appearance.dark)
+                }
+                .accessibilityIdentifier(AccessibilityID.Settings.appearance)
             case .notificationsAndSounds:
                 notificationsAndSounds
             case .intervals:
