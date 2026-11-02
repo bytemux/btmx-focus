@@ -17,9 +17,31 @@ public final class SettingsStore {
     }
 
     @ObservationIgnored private let defaults: UserDefaults
+    @ObservationIgnored private let soundPlayer: SoundPlayer
 
-    public init(defaults: UserDefaults = .standard) {
+    public init(defaults: UserDefaults = .standard, soundPlayer: SoundPlayer = SystemSoundPlayer()) {
         self.defaults = defaults
+        self.soundPlayer = soundPlayer
         preferences = Preferences(defaults: defaults)
+    }
+
+    /// Sets the sound for the end of `phase` ("" for None) and plays it as a preview.
+    public func pickEndSound(_ name: String, after phase: Phase) {
+        switch phase {
+        case .focus: preferences.focusEndSound = name
+        case .rest: preferences.breakEndSound = name
+        }
+        previewEndSound(after: phase)
+    }
+
+    /// Previews the new volume with the Focus-end sound, or the break-end one
+    /// if that is None.
+    public func volumeSliderReleased() {
+        previewEndSound(after: preferences.endSound(after: .focus) == nil ? .rest : .focus)
+    }
+
+    private func previewEndSound(after phase: Phase) {
+        guard let sound = preferences.endSound(after: phase) else { return }
+        soundPlayer.play(sound, volume: preferences.volume)
     }
 }
