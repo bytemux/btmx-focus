@@ -107,16 +107,17 @@ tests and run the `BtmxFocus` scheme. Running from Xcode works like
 
 ## Manual MVP check
 
-`scripts/e2e.sh` covers the status item, the popover, the `⋯` menu and
-Settings (`docs/testing.md`). What it can't drive, check by hand with the
-bundled app:
+Before a release, run `scripts/e2e.sh` for the critical path
+(`docs/testing.md`). What it doesn't cover, check by hand with the bundled
+app:
 
 1. No Dock icon.
 2. ▶ shows the time to the left of the icon without the icon moving.
-3. Sleep the Mac (Apple menu → Sleep), wake it: Ready(Focus) `30:00`. (The
-   E2E suite only simulates the sleep notification.)
-4. The first ▶ asks for notification permission.
-5. Phase end: a notification banner, and the Glass sound (after focus) or
+3. Clicking elsewhere closes the popover; Settings' three tabs switch; ⌘W
+   closes Settings and `⋯` → Settings… brings the same window back.
+4. Sleep the Mac (Apple menu → Sleep), wake it: Ready(Focus) `30:00`.
+5. The first ▶ asks for notification permission.
+6. Phase end: a notification banner, and the Glass sound (after focus) or
    Hero (after rest). To check this without waiting 30 minutes, launch the
    E2E app with a short schedule:
    `open "build/btmx-focus E2E.app" --args --e2e-focus-seconds 5 --e2e-rest-seconds 5`.

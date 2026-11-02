@@ -85,20 +85,27 @@ only Xcode ships.
 `scripts/e2e.sh` builds `build/btmx-focus E2E.app`
 (`scripts/build-app.sh e2e`), counts down 3 s and runs `BtmxFocusE2ETests`.
 The suite launches the real app and clicks through it like a user (ADR 0010).
-**It takes over the mouse and keyboard for about a minute; don't touch
-them.** Extra arguments go to `swift test`:
+**It takes over the mouse and keyboard for about half a minute; don't touch
+them.** Run it on request, typically before a release; it isn't part of the
+routine `swift test`. Extra arguments go to `swift test`:
 
 ```sh
 scripts/e2e.sh                              # whole suite
-scripts/e2e.sh --filter SettingsFlows       # one suite
+scripts/e2e.sh --filter settingsAndQuit     # one test
 ```
 
-What it covers: status item → popover (Ready, Running with time + red icon,
-Paused gray + frozen, resume), Skip, Reset, a 3 s/2 s phase end (next phase
-waits, signal breadcrumb), simulated sleep, click outside, clicking the item
-while open, Space, Esc (closes and hands back the keyboard), `⋯` → Quit,
-`⋯` → Settings…, its three tabs, "Show timer in menu bar" off (icon only,
-still off after relaunch), ⌘W and reopening the same window.
+It checks the critical path only, in three launches:
+
+- **timer**: status item → popover with the keyboard; Play (time + red icon
+  in the menu bar), Space pauses (gray), Reset, a 5 s phase end (rest waits
+  at full length, signal breadcrumb), Skip, Esc (closes and hands back the
+  keyboard).
+- **settingsAndQuit**: `⋯` → Settings…, "Show timer in menu bar" off → icon
+  only while running, `⋯` → Quit, still off after relaunch.
+
+Everything else (every button, tabs, edge cases) is for unit and snapshot
+tests, or a look by hand. Extend these flows rather than adding launches:
+each one costs a few seconds.
 
 ### Permissions
 
@@ -120,7 +127,7 @@ behind the notch), the test fails saying so; quit some menu-bar apps.
   real btmx-focus with its own settings and logs. Only this debug build
   accepts the launch arguments in `E2EContract` (`--e2e-focus-seconds`,
   `--e2e-rest-seconds`, `--e2e-no-notifications`, `--e2e-debug-logging`,
-  `--e2e-reset-settings`) and the simulated-sleep notification. Every test
+  `--e2e-reset-settings`). Every test
   starts a fresh app with its settings wiped.
 - **Driver** (`Sources/BtmxFocusDriver/`): finds elements by accessibility
   identifier (`AccessibilityID` in `BtmxFocusUIContract`, set by the app),

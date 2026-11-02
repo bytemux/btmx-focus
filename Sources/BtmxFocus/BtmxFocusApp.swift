@@ -67,24 +67,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         )
         if let e2e {
             CrashLog.record("e2e build: \(e2e)")
-            observeSimulatedSleep()
         }
     }
 
     func applicationWillTerminate(_: Notification) {
         CrashLog.markCleanExit()
-    }
-
-    /// The E2E suite can't put the Mac to sleep; it asks for the same
-    /// notification the system would post.
-    private func observeSimulatedSleep() {
-        DistributedNotificationCenter.default().addObserver(
-            forName: .init(E2EContract.simulateSleepNotification), object: nil, queue: .main
-        ) { _ in
-            MainActor.assumeIsolated {
-                CrashLog.record("e2e: simulated sleep")
-                NSWorkspace.shared.notificationCenter.post(name: NSWorkspace.willSleepNotification, object: nil)
-            }
-        }
     }
 }

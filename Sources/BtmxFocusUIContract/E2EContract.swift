@@ -4,10 +4,6 @@ public enum E2EContract {
     public static let bundleIdentifier = "com.btmx.focus.e2e"
     public static let appName = "btmx-focus E2E"
 
-    /// Posted on the distributed notification center; the app reacts as if
-    /// the Mac were going to sleep.
-    public static let simulateSleepNotification = "com.btmx.focus.e2e.simulateSleep"
-
     /// Debug launch arguments.
     public enum Argument {
         /// Followed by a number of seconds.

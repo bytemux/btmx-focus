@@ -1,4 +1,3 @@
-import ApplicationServices
 import BtmxFocusDriver
 import BtmxFocusUIContract
 import Foundation
@@ -43,9 +42,9 @@ enum E2E {
         return found ? String(format: "%02d:%02d", seconds / 60, seconds % 60) : ""
     }
 
-    /// Focus 3 s, rest 2 s.
+    /// Focus 5 s, rest 2 s.
     static let shortSchedule = [
-        E2EContract.Argument.focusSeconds, "3", E2EContract.Argument.restSeconds, "2",
+        E2EContract.Argument.focusSeconds, "5", E2EContract.Argument.restSeconds, "2",
     ]
 }
 
@@ -100,14 +99,5 @@ extension FocusApp {
         // 0.3 s of a close (it takes it for the click that closed it).
         try waitForBreadcrumb(containing: "popover close", since: mark)
         Thread.sleep(forTimeInterval: 0.35)
-    }
-
-    /// SwiftUI gives the tab buttons no identifiers of ours (they get the
-    /// SF Symbol's name), so they're found by their label.
-    func settingsTab(_ label: String) throws -> AXElement {
-        let window = try element(AccessibilityID.Settings.window)
-        return try wait(for: "Settings tab \(label)") {
-            window.first { $0.role == kAXRadioButtonRole && $0.label == label }
-        }
     }
 }

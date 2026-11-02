@@ -22,8 +22,7 @@ by element.
   real instance and has its own sandbox container, so its settings and
   logs are separate. Only this build (debug, this bundle id) accepts the
   `--e2e-*` launch arguments: short schedule, no notifications and so no
-  permission prompt, debug logging on, wipe settings. It also listens for a
-  distributed notification that simulates system sleep.
+  permission prompt, debug logging on, wipe settings.
 - **Accessibility identifiers** for the status item, the popover's controls,
   the `⋯` menu items and the Settings window live in `BtmxFocusUIContract`,
   shared by the app and the driver. Elements are looked up by identifier.
@@ -45,7 +44,12 @@ by element.
   `launch`, `quit`) for exploring the UI by hand or from an agent, in
   place of screenshots or computer use.
 - **E2E suite** (`BtmxFocusE2ETests`, Swift Testing) is skipped unless
-  `E2E=1`, runs serialized, and launches a fresh app per test.
+  `E2E=1`, runs serialized, and launches a fresh app per test. It covers
+  the critical path only (timer flow, Settings, Quit) in as few launches
+  as possible; details stay in unit and snapshot tests.
+- **Run on request only**, typically before a release, since it takes the
+  user's mouse and keyboard. Agents don't run it (or `focus-drive`) on
+  their own.
   `scripts/e2e.sh` builds the E2E app, counts down, runs the suite and
   prints the screenshot folder (`build/e2e/<timestamp>/`, gitignored).
   Each checkpoint saves a screenshot; a failure saves a full screenshot,
@@ -54,10 +58,10 @@ by element.
 ## Consequences
 
 - The manual MVP check shrinks to what can't be driven from outside: real
-  sleep, the notification banner and prompt, the sounds, plus two visual
-  checks the suite doesn't assert (no Dock icon; the icon stays put when
-  the time appears).
-- E2E runs take over the mouse and keyboard for about a minute and need
+  sleep, the notification banner and prompt, the sounds, plus what the
+  critical path leaves out (no Dock icon, the icon staying put, click
+  outside, Settings tabs, ⌘W).
+- E2E runs take over the mouse and keyboard for about half a minute and need
   Accessibility and Screen Recording for the app they run from (terminal or
   editor). They can't run in the background or on CI as they are.
 - The app carries debug-only E2E hooks, gated by build configuration and
