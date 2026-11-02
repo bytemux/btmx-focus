@@ -23,16 +23,16 @@ struct SnapshotTests {
         await state.drive(harness)
         // The ⋯ menu's Debug Logging toggle reads @AppStorage; keep it off
         // the test process's real defaults.
-        let view = PopoverView(model: harness.model, openSettings: {})
+        let view = PopoverView(model: harness.model, dailyTarget: 10, openSettings: {})
             .defaultAppStorage(freshDefaults().defaults)
-        assertSnapshot(of: view, size: CGSize(width: 240, height: 312), named: state.rawValue)
+        assertSnapshot(of: view, size: CGSize(width: 240, height: 308), named: state.rawValue)
     }
 
     /// Each tab's content without the tab bar, which offscreen rendering
     /// can't draw (its selected segment comes out blank).
     @Test(arguments: SettingsTab.allCases)
     func settings(tab: SettingsTab) {
-        let store = SettingsStore(defaults: freshDefaults().defaults)
+        let store = SettingsStore(defaults: freshDefaults().defaults, focusStatus: FakeFocusStatus())
         let launchAtLogin = LaunchAtLogin(service: FakeLoginItemService(), center: NotificationCenter())
         let view = SettingsTabContent(tab: tab, settings: store, launchAtLogin: launchAtLogin)
         assertSnapshot(of: view, size: CGSize(width: 460, height: 260), named: "\(tab)")

@@ -27,6 +27,8 @@ public struct Preferences: Sendable, Equatable {
     public var breakEndSound = "Hero"
     /// `NSSound.volume`, 0...1.
     public var volume = 1.0
+    /// No end-of-phase sound while Do Not Disturb or a Focus mode is on.
+    public var silentDuringFocus = false
     public var appearance = Appearance.auto
 
     public init() {}
@@ -39,6 +41,7 @@ public extension Preferences {
     static let shortRestMinuteOptions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20]
     static let longRestMinuteOptions = [5, 10, 15, 20, 25, 30, 40, 45, 60]
     static let longRestEveryOptions = Array(2 ... 10)
+    static let dailyTargetOptions = Array(1 ... 20)
 
     var schedule: Schedule {
         Schedule(
@@ -76,6 +79,7 @@ public extension Preferences {
         focusEndSound = read("focusEndSound", standard.focusEndSound)
         breakEndSound = read("breakEndSound", standard.breakEndSound)
         volume = read("volume", standard.volume)
+        silentDuringFocus = read("silentDuringFocus", standard.silentDuringFocus)
         appearance = Appearance(rawValue: read("appearance", standard.appearance.rawValue)) ?? standard.appearance
     }
 

@@ -9,9 +9,15 @@ public final class TimerModel {
     public private(set) var engine: TimerEngine
     /// Last time the display was refreshed; views derive the remaining time from it.
     public private(set) var now: Date
+    /// Focus intervals completed today, saved on every change.
+    public private(set) var tally: DailyTally {
+        didSet { tally.save(to: defaults) }
+    }
 
     @ObservationIgnored private let clock: TimerClock
     @ObservationIgnored private let signaler: PhaseSignalSink
+    @ObservationIgnored private let defaults: UserDefaults
+    @ObservationIgnored private let calendar: Calendar
     @ObservationIgnored private var tickTask: Task<Void, Never>?
     @ObservationIgnored private var observers: [NSObjectProtocol] = []
     @ObservationIgnored private var displayAsleep = false
@@ -22,11 +28,13 @@ public final class TimerModel {
 
     /// The notification centers default to the system ones: NSWorkspace's
     /// (sleep, display), the distributed one (screen lock) and the default
-    /// one (system clock changes).
+    /// one (system clock changes). The daily tally is kept in `defaults`.
     public init(
         engine: TimerEngine = TimerEngine(),
         clock: TimerClock = SystemClock(),
         signaler: PhaseSignalSink,
+        defaults: UserDefaults = .standard,
+        calendar: Calendar = .current,
         workspaceCenter: NotificationCenter = NSWorkspace.shared.notificationCenter,
         distributedCenter: NotificationCenter = DistributedNotificationCenter.default(),
         defaultCenter: NotificationCenter = .default
@@ -34,6 +42,9 @@ public final class TimerModel {
         self.engine = engine
         self.clock = clock
         self.signaler = signaler
+        self.defaults = defaults
+        self.calendar = calendar
+        tally = DailyTally(defaults: defaults)
         now = clock.now
         observeSystem(workspace: workspaceCenter, distributed: distributedCenter, local: defaultCenter)
     }
@@ -43,6 +54,9 @@ public final class TimerModel {
     public var clockText: String { ClockFormat.string(for: remaining) }
     /// Elapsed fraction of the phase, for the progress ring.
     public var progress: Double { engine.progress(at: now) }
+    /// "Today n/target": read at the real time, so a popover opened after
+    /// midnight shows 0 even if the timer sat Ready since yesterday.
+    public var todayCount: Int { tally.count(on: clock.now, calendar: calendar) }
     public var isRunning: Bool { if case .running = state { true } else { false } }
     /// Nothing to reset back to at the start of a focus phase.
     public var canReset: Bool { state != .ready(.focus) }
@@ -112,6 +126,9 @@ public final class TimerModel {
             return idleTime
         }())
         if case let .phaseCompleted(completion) = event {
+            if completion.phase == .focus {
+                tally.recordFocusInterval(at: date, calendar: calendar)
+            }
             let skipped = completion.skippedBreak.map { phase in
                 ", \(PhaseStyle.name(of: phase)) skipped (idle \(ClockFormat.string(for: idleTime)))"
             } ?? ""

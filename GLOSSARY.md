@@ -56,7 +56,8 @@ How long is left of the current phase, shown rounded up to the whole second.
 
 **Progress ring**:
 A circle that empties clockwise from 12 o'clock as the remaining time runs
-down: around the clock in the popover, and as the menu-bar icon while Running.
+down: behind the phase name, clock and Play/Pause in the popover, and as the
+menu-bar icon while Running.
 Purely visual; it can't be dragged.
 _Avoid_: progress bar, dial
 
@@ -100,12 +101,24 @@ The number of Focus intervals the user aims for in a day, shown as
 "Today n/target".
 _Avoid_: goal, quota
 
+**Daily tally**:
+How many Focus intervals the user completed today (the n in "Today
+n/target"). It starts again at local midnight and survives quit and relaunch.
+_Avoid_: streak, score
+
 ## Signals
 
 **End-of-phase signal**:
 What tells the user a phase ended: the icon change, a notification and a
 sound. Skip and Reset never give one.
 _Avoid_: alarm, alert, chime
+
+**Silent during Focus**:
+The option (off by default) that drops the sound from the end-of-phase
+signal while Do Not Disturb or another Focus mode is on. If the app can't
+tell (no permission), the sound plays. Shown only in builds that can read
+the Focus status.
+_Avoid_: mute, quiet hours
 
 ## Interface
 

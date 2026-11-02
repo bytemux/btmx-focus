@@ -11,6 +11,7 @@ public enum AccessibilityID {
         public static let skip = "btmx.popover.skip"
         public static let reset = "btmx.popover.reset"
         public static let more = "btmx.popover.more"
+        public static let today = "btmx.popover.today"
     }
 
     /// Items of the popover's `⋯` menu.
@@ -31,7 +32,9 @@ public enum AccessibilityID {
         public static let focusEndSound = "btmx.settings.focusEndSound"
         public static let breakEndSound = "btmx.settings.breakEndSound"
         public static let volume = "btmx.settings.volume"
+        public static let silentDuringFocus = "btmx.settings.silentDuringFocus"
         public static let completionNotifications = "btmx.settings.completionNotifications"
         public static let appearance = "btmx.settings.appearance"
+        public static let dailyTarget = "btmx.settings.dailyTarget"
     }
 }

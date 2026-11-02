@@ -87,6 +87,13 @@ public struct SettingsTabContent: View {
                     Preferences.longRestEveryOptions,
                     label: Self.intervals
                 )
+                intervalPicker(
+                    "Target per day",
+                    $settings.preferences.dailyTarget,
+                    Preferences.dailyTargetOptions,
+                    label: Self.intervals
+                )
+                .accessibilityIdentifier(AccessibilityID.Settings.dailyTarget)
             case .notificationsAndSounds:
                 notificationsAndSounds
             }
@@ -128,6 +135,10 @@ public struct SettingsTabContent: View {
             }
         }
         .accessibilityIdentifier(AccessibilityID.Settings.volume)
+        if settings.canSilenceDuringFocus {
+            Toggle("Silent during Do Not Disturb and Focus", isOn: $settings.preferences.silentDuringFocus)
+                .accessibilityIdentifier(AccessibilityID.Settings.silentDuringFocus)
+        }
         Toggle("Completion notifications", isOn: $settings.preferences.completionNotifications)
             .accessibilityIdentifier(AccessibilityID.Settings.completionNotifications)
     }
