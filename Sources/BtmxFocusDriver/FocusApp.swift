@@ -262,7 +262,7 @@ public final class FocusApp: @unchecked Sendable {
 
     // MARK: Screenshots and dumps
 
-    /// A named checkpoint: the status item with the popover and any open
+    /// A named checkpoint: the status item with the popover and its open ⋯
     /// menu under it, plus the Settings window (if open).
     @discardableResult
     public func screenshot(_ name: String) throws -> [URL] {
@@ -271,7 +271,9 @@ public final class FocusApp: @unchecked Sendable {
         if let popover = try find(AccessibilityID.Popover.root)?.frame {
             area = area.union(popover)
         }
-        if let menu = try application().first(where: { $0.role == kAXMenuRole })?.frame {
+        // Only the ⋯ menu: the hidden main menu's menus are in the AX tree too,
+        // with frames at the screen's origin.
+        if let menu = try find(AccessibilityID.Popover.more)?.first(where: { $0.role == kAXMenuRole })?.frame {
             area = area.union(menu)
         }
         try urls.append(artifacts.screenshot(name, rect: area.insetBy(dx: -12, dy: -12)))
