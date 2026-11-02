@@ -14,7 +14,7 @@ Sources/BtmxFocusTestSupport/  fake clock and harness shared by the tests
 Tests/BtmxFocusCoreTests/  Swift Testing tests for the engine
 Tests/BtmxFocusKitTests/   app-layer unit tests
 Tests/BtmxFocusSnapshotTests/  snapshot tests + reference images
-Support/                   Info.plist + entitlements for the .app bundle
+Support/                   Info.plist, entitlements and icon for the .app bundle
 Sources/BtmxFocusUIContract/  accessibility ids + E2E launch arguments
 Sources/BtmxFocusDriver/   E2E driver (Accessibility + real input)
 Sources/FocusDrive/        focus-drive CLI on the driver
@@ -42,6 +42,16 @@ open build/btmx-focus.app
 
 The app appears in the menu bar only (no Dock icon). Click the item to open
 the popover. Quit from the `⋯` menu in the popover.
+
+The icon is an Icon Composer icon, `Support/AppIcon.icon`: `icon.json`
+stacks the layers in `Assets/` on the background and adds the Liquid Glass,
+and the build compiles it with `actool`. `scripts/make-icon.swift` draws the
+layers; rerun it after changing the drawing, and change the menu-bar
+logo (`MenuBarLogo`) to match. Open the `.icon` in Icon
+Composer (Xcode → Open Developer Tool) to tune the glass, then build.
+
+The script stamps the git commit into the bundle's Info.plist
+(`BtmxCommit`); the About panel shows it as the version.
 
 For a debug build: `scripts/build-app.sh debug`. `scripts/build-app.sh e2e`
 builds `build/btmx-focus E2E.app` for the E2E tests (`docs/testing.md`).
@@ -167,3 +177,6 @@ app:
     auto-start), the banner says you were away for the break, and the log
     shows `Rest skipped (idle …)`. Touch the mouse just before the end and
     the break comes as usual.
+12. `⋯` → About btmx-focus opens the standard About panel in front of other
+    apps, showing "Version <commit>" (`<commit>-dirty` when built with
+    uncommitted changes).

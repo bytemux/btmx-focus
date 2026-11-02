@@ -37,6 +37,16 @@ cp Support/Info.plist "$app/Contents/Info.plist"
 plist="$app/Contents/Info.plist"
 /usr/libexec/PlistBuddy -c "Set :CFBundleIdentifier $bundle_id" \
     -c "Set :CFBundleName $name" -c "Set :CFBundleDisplayName $name" "$plist"
+# The About panel's version (AboutPanel.commitKey): the commit, for now.
+commit="$(git rev-parse --short HEAD 2>/dev/null || echo unknown)"
+[ -z "$(git status --porcelain 2>/dev/null)" ] || commit="$commit-dirty"
+/usr/libexec/PlistBuddy -c "Add :BtmxCommit string $commit" "$plist"
+
+# The Liquid Glass icon (Assets.car) plus an AppIcon.icns for macOS 15.
+xcrun actool Support/AppIcon.icon --compile "$app/Contents/Resources" \
+    --platform macosx --minimum-deployment-target 15.0 --app-icon AppIcon \
+    --output-partial-info-plist build/AppIcon-partial.plist \
+    --errors --warnings --output-format human-readable-text >/dev/null
 
 codesign --force --sign - --options runtime \
     --entitlements Support/btmx-focus.entitlements "$app"

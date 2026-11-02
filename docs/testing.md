@@ -14,7 +14,7 @@ SNAPSHOT_RECORD=1 swift test                 # re-record every snapshot
 | Target | Tests | Seam |
 | --- | --- | --- |
 | `BtmxFocusCore` | `BtmxFocusCoreTests` | `TimerEngine`, `Preferences`, `DailyTally`, `ClockFormat`: pure values |
-| `BtmxFocusKit` | `BtmxFocusKitTests` | `TimerModel`, `SettingsStore`, `StatusItemPresentation` in-process |
+| `BtmxFocusKit` | `BtmxFocusKitTests` | `TimerModel`, `SettingsStore`, `StatusItemPresentation`, `AboutPanel` options in-process |
 | `BtmxFocusKit` | `BtmxFocusSnapshotTests` | the rendered `PopoverView`, `SettingsView` and status-item button |
 | `BtmxFocus` | `BtmxFocusE2ETests` (only with `E2E=1`) | the bundled E2E app from outside: what a user sees, plus breadcrumbs |
 

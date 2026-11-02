@@ -89,6 +89,9 @@ public struct PopoverView: View {
                 Spacer()
 
                 Menu {
+                    Button("About btmx-focus") { AboutPanel.show() }
+                        .accessibilityIdentifier(AccessibilityID.MoreMenu.about)
+                    Divider()
                     Button("Settings…", action: openSettings)
                         .keyboardShortcut(",")
                         .accessibilityIdentifier(AccessibilityID.MoreMenu.settings)

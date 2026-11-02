@@ -145,9 +145,13 @@ remaining time and the timer controls.
 _Avoid_: window, dropdown, main window
 
 **More menu**:
-The `⋯` menu in the popover, holding the app actions (Settings, Debug
+The `⋯` menu in the popover, holding the app actions (About, Settings, Debug
 Logging, Show Logs in Finder, Quit).
 _Avoid_: overflow menu, gear menu
+
+**About panel**:
+The standard macOS About panel, opened from the More menu, showing the app's
+name, icon and version (for now, the git commit it was built from).
 
 **Settings window**:
 Where the user changes the schedule, signals and other options.
