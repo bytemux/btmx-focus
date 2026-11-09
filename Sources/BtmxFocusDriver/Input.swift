@@ -66,8 +66,8 @@ public enum Input {
             throw DriverError("Unknown key in \"\(keys)\"; known: \(keyCodes.keys.sorted().joined(separator: " "))")
         }
         let modifiers = try parts.map { name in
-            guard let modifier = modifiers[name] else {
-                throw DriverError("Unknown modifier \"\(name)\"; known: \(modifiers.keys.sorted())")
+            guard let modifier = Self.modifiers[name] else {
+                throw DriverError("Unknown modifier \"\(name)\"; known: \(Self.modifiers.keys.sorted())")
             }
             return modifier
         }
