@@ -21,7 +21,7 @@ Sources/FocusDrive/        focus-drive CLI on the driver
 Tests/BtmxFocusE2ETests/   E2E suite (runs only with E2E=1)
 scripts/build-app.sh       builds build/btmx-focus.app (or the E2E app)
 scripts/e2e.sh             builds the E2E app and runs the E2E suite
-scripts/release.sh         publishes a GitHub Release and updates the cask
+scripts/release.sh         publishes a GitHub Release and updates the cask (run by the Release workflow)
 ```
 
 ## Requirements
@@ -126,13 +126,19 @@ swiftlint                # config: .swiftlint.yml
 Releases are unsigned DMGs on GitHub Releases, installed through our
 Homebrew tap `bytemux/homebrew-tap` (ADR 0016).
 
-1. In a PR, bump `CFBundleShortVersionString` in `Support/Info.plist`
-   (semver: `1.0.1` for fixes, `1.1.0` for features) and merge it.
-2. Run the E2E suite and the manual check below.
-3. On an up-to-date, clean main: `scripts/release.sh`. It runs the tests,
-   builds `build/btmx-focus-<version>.dmg`, creates the release `v<version>`
-   and pushes the new version and checksum to `Casks/btmx-focus.rb` in the
-   tap.
+1. Run the E2E suite and the manual check below.
+2. Merge everything to main, then Actions → Release → Run workflow. It
+   computes the version from the commits since the latest `v*` tag
+   (`type!:` or `BREAKING CHANGE` → major, `feat`/`fix` → minor, anything
+   else → patch; no tag yet → 1.0.0), then on a macOS runner runs the tests,
+   builds `btmx-focus-<version>.dmg`, creates the release `v<version>` and
+   pushes the new version and checksum to `Casks/btmx-focus.rb` in the tap.
+   "Dry run" only prints the version and changelog. Nobody edits the
+   version by hand; `Support/Info.plist` keeps a placeholder and the
+   release build stamps the real one.
+3. The tap push needs the repo secret `TAP_TOKEN`: a fine-grained personal
+   access token on `bytemux/homebrew-tap` with Contents: read and write.
+   It expires (at most a year); renew it when the release fails to push.
 4. Check: `brew update && brew upgrade btmx-focus` (or `brew install
    bytemux/tap/btmx-focus`) installs and opens the new version.
 
@@ -145,7 +151,7 @@ tests and run the `BtmxFocus` scheme. Running from Xcode works like
 
 ## Manual MVP check
 
-Before a release (step 2 above), run `scripts/e2e.sh` for the critical path
+Before a release (step 1 above), run `scripts/e2e.sh` for the critical path
 (`docs/testing.md`). What it doesn't cover, check by hand with the bundled
 app:
 

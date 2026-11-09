@@ -1,15 +1,17 @@
 #!/usr/bin/env bash
-# Publishes a release (ADR 0016): builds the app, packs it into a DMG,
-# creates the GitHub Release v<version> and points the Homebrew cask in
-# bytemux/homebrew-tap at it. The version is CFBundleShortVersionString in
-# Support/Info.plist; bump it in a PR first.
-# Usage: scripts/release.sh            (from an up-to-date, clean main)
+# Publishes a release (ADR 0016): tests and builds the app, packs it into a
+# DMG, creates the GitHub Release v<version> and points the Homebrew cask in
+# bytemux/homebrew-tap at it. Run by .github/workflows/release.yml, which
+# computes the version from the commits since the last tag.
+# Usage: VERSION=1.2.3 [CHANGELOG=...] [TAP_TOKEN=...] scripts/release.sh
+#   TAP_TOKEN: token with write access to the tap (default: gh's login)
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
 repo="bytemux/btmx-focus"
 tap="bytemux/homebrew-tap"
-version="$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" Support/Info.plist)"
+version="${VERSION:?set VERSION, e.g. VERSION=1.2.3}"
+export VERSION # build-app.sh stamps it into the bundle
 tag="v$version"
 dmg="build/btmx-focus-$version.dmg"
 
@@ -18,10 +20,7 @@ die() {
     exit 1
 }
 
-[ "$(git branch --show-current)" = main ] || die "not on main"
-[ -z "$(git status --porcelain)" ] || die "working tree is dirty"
-git fetch --quiet origin main --tags
-[ "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)" ] || die "main is not in sync with origin/main"
+git fetch --quiet origin --tags
 ! git rev-parse --quiet --verify "refs/tags/$tag" >/dev/null || die "$tag already exists; bump the version"
 
 swift test
@@ -53,15 +52,24 @@ xattr -dr com.apple.quarantine /Applications/btmx-focus.app
 \`\`\`
 
 Requires macOS 15 or newer on Apple silicon.
+
+## Changes
+
+${CHANGELOG:-}
 EOF
     )"
-git fetch --quiet origin --tags
 
-gh repo clone "$tap" "$staging/tap" -- --quiet
+if [ -n "${TAP_TOKEN:-}" ]; then
+    git clone --quiet "https://x-access-token:$TAP_TOKEN@github.com/$tap.git" "$staging/tap"
+else
+    gh repo clone "$tap" "$staging/tap" -- --quiet
+fi
 cask="$staging/tap/Casks/btmx-focus.rb"
 sed -i '' -e "s/^  version \".*\"/  version \"$version\"/" \
     -e "s/^  sha256 \".*\"/  sha256 \"$sha256\"/" "$cask"
-git -C "$staging/tap" commit --quiet -am "btmx-focus $version"
+git -C "$staging/tap" -c user.name="github-actions[bot]" \
+    -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+    commit --quiet -am "btmx-focus $version"
 git -C "$staging/tap" push --quiet
 
 echo "Released $tag: https://github.com/$repo/releases/tag/$tag"
