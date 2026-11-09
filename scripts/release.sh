@@ -67,7 +67,9 @@ fi
 cask="$staging/tap/Casks/btmx-focus.rb"
 sed -i '' -e "s/^  version \".*\"/  version \"$version\"/" \
     -e "s/^  sha256 \".*\"/  sha256 \"$sha256\"/" "$cask"
-git -C "$staging/tap" -c user.name="github-actions[bot]" \ -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \ commit --quiet -am "btmx-focus $version"
+git -C "$staging/tap" -c user.name="github-actions[bot]" \
+    -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+    commit --quiet -am "btmx-focus $version"
 git -C "$staging/tap" push --quiet
 
 echo "Released $tag: https://github.com/$repo/releases/tag/$tag"
