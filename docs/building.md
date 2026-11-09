@@ -28,7 +28,8 @@ scripts/release.sh         publishes a GitHub Release and updates the cask (run 
 
 - macOS 15 or newer
 - Xcode 16+ (Swift 6), selected with `xcode-select` and its license
-  accepted (ADR 0009)
+  accepted (ADR 0009); the release workflow runs on `macos-26` (Xcode 26,
+  which the Liquid Glass icon needs)
 - `brew install swiftlint swiftformat`
 
 If any of these is missing, the command that needs it fails with its own
