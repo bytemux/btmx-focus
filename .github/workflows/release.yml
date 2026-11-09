@@ -27,7 +27,7 @@ jobs:
       version: ${{ steps.next.outputs.version }}
       changelog: ${{ steps.next.outputs.changelog }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           fetch-depth: 0
       - id: next
@@ -90,7 +90,7 @@ jobs:
     if: ${{ !inputs.dry_run }}
     runs-on: macos-15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - name: Build, publish and update the tap
         env:
           VERSION: ${{ needs.plan.outputs.version }}
