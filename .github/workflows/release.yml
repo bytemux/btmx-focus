@@ -1,0 +1,100 @@
+# Manual release (ADR 0016): Actions → Release → Run workflow, on main.
+# The version is computed from the commits on main since the latest v* tag:
+#   breaking (`type!:` or BREAKING CHANGE) → major, feat/fix → minor, rest → patch.
+# No tag yet → 1.0.0. The macOS runner only starts once the plan job has a version.
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Only compute and print the version; build nothing
+        type: boolean
+        default: false
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  plan:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.next.outputs.version }}
+      changelog: ${{ steps.next.outputs.changelog }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - id: next
+        shell: bash
+        run: |
+          set -euo pipefail
+          base="$(git tag --list 'v[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | head -n 1)"
+          range=HEAD
+          [ -z "$base" ] || range="$base..HEAD"
+          shas="$(git rev-list --first-parent "$range")"
+          [ -n "$shas" ] || { echo "::error::Nothing to release since $base"; exit 1; }
+
+          breaking='^[a-zA-Z]+(\([^)]*\))?!:'
+          feature='^(feat|fix)(\([^)]*\))?:'
+          level=patch
+          changelog=""
+          for sha in $shas; do
+            msg="$(git log -1 --format=%B "$sha")"
+            title="$(head -n 1 <<<"$msg")"
+            # A merge commit keeps the PR title in its body.
+            if [[ "$title" == "Merge pull request"* ]]; then
+              title="$(sed -n '2,$p' <<<"$msg" | grep -v '^[[:space:]]*$' | head -n 1 || true)"
+            fi
+            changelog+="- ${title}"$'\n'
+            if [[ "$title" =~ $breaking ]] || grep -q 'BREAKING CHANGE' <<<"$msg"; then
+              level=major
+            elif [[ "$title" =~ $feature ]] && [ "$level" != major ]; then
+              level=minor
+            fi
+          done
+
+          if [ -z "$base" ]; then
+            version=1.0.0
+            level=initial
+          else
+            IFS=. read -r major minor patch <<<"${base#v}"
+            case "$level" in
+              major) version="$((major + 1)).0.0" ;;
+              minor) version="$major.$((minor + 1)).0" ;;
+              *) version="$major.$minor.$((patch + 1))" ;;
+            esac
+          fi
+
+          {
+            echo "## Release ${version}"
+            echo "Base: ${base:-none} · bump: ${level}"
+            echo
+            printf '%s' "$changelog"
+          } | tee -a "${GITHUB_STEP_SUMMARY:-/dev/null}"
+          delimiter="EOF_$RANDOM$RANDOM"
+          {
+            echo "version=$version"
+            echo "changelog<<$delimiter"
+            printf '%s' "$changelog"
+            echo "$delimiter"
+          } >>"${GITHUB_OUTPUT:-/dev/null}"
+
+  release:
+    needs: plan
+    if: ${{ !inputs.dry_run }}
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build, publish and update the tap
+        env:
+          VERSION: ${{ needs.plan.outputs.version }}
+          CHANGELOG: ${{ needs.plan.outputs.changelog }}
+          GH_TOKEN: ${{ github.token }}
+          TAP_TOKEN: ${{ secrets.TAP_TOKEN }}
+        run: scripts/release.sh

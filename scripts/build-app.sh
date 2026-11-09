@@ -37,6 +37,12 @@ cp Support/Info.plist "$app/Contents/Info.plist"
 plist="$app/Contents/Info.plist"
 /usr/libexec/PlistBuddy -c "Set :CFBundleIdentifier $bundle_id" \
     -c "Set :CFBundleName $name" -c "Set :CFBundleDisplayName $name" "$plist"
+# Releases pass VERSION (computed by the release workflow); local builds keep
+# the placeholder in Support/Info.plist.
+if [ -n "${VERSION:-}" ]; then
+    /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $VERSION" \
+        -c "Set :CFBundleVersion $VERSION" "$plist"
+fi
 # The About panel's version (AboutPanel.commitKey): the commit, for now.
 commit="$(git rev-parse --short HEAD 2>/dev/null || echo unknown)"
 [ -z "$(git status --porcelain 2>/dev/null)" ] || commit="$commit-dirty"

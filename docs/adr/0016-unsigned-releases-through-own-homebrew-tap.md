@@ -15,8 +15,11 @@ disables casks that fail Gatekeeper, and Homebrew 5 dropped
 ## Decision
 
 - Each release is a GitHub Release `v<version>` with
-  `btmx-focus-<version>.dmg`, built by `scripts/release.sh` from main.
-  The version is `CFBundleShortVersionString` in `Support/Info.plist`.
+  `btmx-focus-<version>.dmg`, built by `scripts/release.sh` from main in
+  the manually dispatched Release workflow. The workflow computes the
+  version from the commits since the latest tag (breaking → major,
+  feat/fix → minor, else patch; first release 1.0.0); the macOS runner
+  only starts when there is something to release.
 - Homebrew installs it from our own tap, `bytemux/homebrew-tap`
   (`brew install bytemux/tap/btmx-focus`); `scripts/release.sh` updates
   the cask's version and checksum.
