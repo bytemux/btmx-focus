@@ -11,17 +11,9 @@ on:
         description: Only compute and print the version; build nothing
         type: boolean
         default: false
-  # TEMPORARY: lets a PR run the build check below. Remove with pr-check.
-  pull_request:
-    paths:
-      - .github/workflows/release.yml
-      - scripts/**
-      - Sources/**
-      - Tests/**
-      - Package.swift
 
 concurrency:
-  group: release-${{ github.event_name }}
+  group: release
   cancel-in-progress: false
 
 permissions:
@@ -106,26 +98,3 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           TAP_TOKEN: ${{ secrets.TAP_TOKEN }}
         run: scripts/release.sh
-
-  # TEMPORARY: builds and tests like `release` but publishes nothing, so a PR
-  # can check the macOS runner without merging. Remove with the pull_request trigger.
-  pr-check:
-    if: github.event_name == 'pull_request'
-    runs-on: macos-26
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
-      - name: Toolchain
-        run: |
-          sw_vers
-          xcodebuild -version
-          swift --version
-      # The same test command as scripts/release.sh.
-      - run: swift test --skip SnapshotTests
-      - run: VERSION=0.0.0 scripts/build-app.sh release
-      - name: Check the bundle
-        run: |
-          lipo -archs build/btmx-focus.app/Contents/MacOS/btmx-focus
-          /usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" build/btmx-focus.app/Contents/Info.plist
-          ls build/btmx-focus.app/Contents/Resources
