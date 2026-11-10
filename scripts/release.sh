@@ -36,9 +36,10 @@ rm -f "$dmg"
 hdiutil create -volname btmx-focus -srcfolder "$staging" -format UDZO -quiet "$dmg"
 sha256="$(shasum -a 256 "$dmg" | cut -d ' ' -f 1)"
 
-gh release create "$tag" "$dmg" --repo "$repo" --target "$(git rev-parse HEAD)" \
-    --title "btmx-focus $version" --notes "$(
-        cat <<EOF
+# A heredoc at the top level, not inside $( ): bash 3.2, the macOS system
+# bash, can't parse an apostrophe in one.
+notes="$staging/notes.md"
+cat >"$notes" <<EOF
 Install with Homebrew:
 
 \`\`\`sh
@@ -59,7 +60,8 @@ Requires macOS 15 or newer on Apple silicon.
 
 ${CHANGELOG:-}
 EOF
-    )"
+gh release create "$tag" "$dmg" --repo "$repo" --target "$(git rev-parse HEAD)" \
+    --title "btmx-focus $version" --notes-file "$notes"
 
 if [ -n "${TAP_TOKEN:-}" ]; then
     git clone --quiet "https://x-access-token:$TAP_TOKEN@github.com/$tap.git" "$staging/tap"
