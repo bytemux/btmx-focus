@@ -98,3 +98,18 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           TAP_TOKEN: ${{ secrets.TAP_TOKEN }}
         run: scripts/release.sh
+      # release.sh can exit 0 without publishing (bash 3.2 does that on a
+      # parse error), so check the result instead of trusting the exit code.
+      - name: Verify the release and the cask
+        env:
+          VERSION: ${{ needs.plan.outputs.version }}
+          GH_TOKEN: ${{ github.token }}
+          TAP_TOKEN: ${{ secrets.TAP_TOKEN }}
+        run: |
+          set -euo pipefail
+          gh release view "v$VERSION" --repo "$GITHUB_REPOSITORY" --json assets --jq '.assets[].name' \
+            | grep -qx "btmx-focus-$VERSION.dmg"
+          GH_TOKEN="$TAP_TOKEN" gh api -H 'Accept: application/vnd.github.raw+json' \
+            repos/bytemux/homebrew-tap/contents/Casks/btmx-focus.rb \
+            | grep -q "^  version \"$VERSION\""
+          echo "v$VERSION is published and the cask points at it"
