@@ -118,3 +118,7 @@ jobs:
             repos/bytemux/homebrew-tap/contents/Casks/btmx-focus.rb \
             | grep -q "^  version \"$VERSION\""
           echo "v$VERSION is published and the cask points at it"
+          {
+            echo "## Released v$VERSION"
+            echo "[Release notes and DMG]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/releases/tag/v$VERSION) · \`brew upgrade btmx-focus\`"
+          } >>"$GITHUB_STEP_SUMMARY"
