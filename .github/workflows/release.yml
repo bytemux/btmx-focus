@@ -91,6 +91,12 @@ jobs:
     runs-on: macos-26
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      # bash 3.2 (macOS) exits 0 after a parse error when the script has an
+      # EXIT trap, so the job would go green having done nothing; fail on
+      # a parse error before anything runs.
+      - name: Check the scripts parse
+        run: |
+          for script in scripts/*.sh; do /bin/bash -n "$script"; done
       - name: Build, publish and update the tap
         env:
           VERSION: ${{ needs.plan.outputs.version }}
@@ -98,3 +104,21 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           TAP_TOKEN: ${{ secrets.TAP_TOKEN }}
         run: scripts/release.sh
+      # Backstop: check the result instead of trusting release.sh's exit code.
+      - name: Verify the release and the cask
+        env:
+          VERSION: ${{ needs.plan.outputs.version }}
+          GH_TOKEN: ${{ github.token }}
+          TAP_TOKEN: ${{ secrets.TAP_TOKEN }}
+        run: |
+          set -euo pipefail
+          gh release view "v$VERSION" --repo "$GITHUB_REPOSITORY" --json assets --jq '.assets[].name' \
+            | grep -qx "btmx-focus-$VERSION.dmg"
+          GH_TOKEN="$TAP_TOKEN" gh api -H 'Accept: application/vnd.github.raw+json' \
+            repos/bytemux/homebrew-tap/contents/Casks/btmx-focus.rb \
+            | grep -q "^  version \"$VERSION\""
+          echo "v$VERSION is published and the cask points at it"
+          {
+            echo "## Released v$VERSION"
+            echo "[Release notes and DMG]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/releases/tag/v$VERSION) · \`brew upgrade btmx-focus\`"
+          } >>"$GITHUB_STEP_SUMMARY"
