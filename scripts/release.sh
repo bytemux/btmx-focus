@@ -23,7 +23,9 @@ die() {
 git fetch --quiet origin --tags
 ! git rev-parse --quiet --verify "refs/tags/$tag" >/dev/null || die "$tag already exists; bump the version"
 
-swift test
+# The snapshots are pixel references recorded on a developer's Mac; a CI
+# runner renders them differently (docs/testing.md). They run in `swift test`.
+swift test --skip SnapshotTests
 scripts/build-app.sh release
 
 staging="$(mktemp -d)"

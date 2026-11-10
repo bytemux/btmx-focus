@@ -111,18 +111,18 @@ jobs:
   # can check the macOS runner without merging. Remove with the pull_request trigger.
   pr-check:
     if: github.event_name == 'pull_request'
-    runs-on: xcode-27
+    runs-on: macos-26
     permissions:
       contents: read
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - name: Toolchain
         run: |
-          sudo xcode-select -s /Applications/Xcode_27.2.app
           sw_vers
           xcodebuild -version
           swift --version
-      - run: swift test
+      # The same test command as scripts/release.sh.
+      - run: swift test --skip SnapshotTests
       - run: VERSION=0.0.0 scripts/build-app.sh release
       - name: Check the bundle
         run: |
