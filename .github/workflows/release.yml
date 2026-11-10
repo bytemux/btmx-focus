@@ -91,6 +91,12 @@ jobs:
     runs-on: macos-26
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      # bash 3.2 (macOS) exits 0 after a parse error when the script has an
+      # EXIT trap, so the job would go green having done nothing; fail on
+      # a parse error before anything runs.
+      - name: Check the scripts parse
+        run: |
+          for script in scripts/*.sh; do /bin/bash -n "$script"; done
       - name: Build, publish and update the tap
         env:
           VERSION: ${{ needs.plan.outputs.version }}
@@ -98,8 +104,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           TAP_TOKEN: ${{ secrets.TAP_TOKEN }}
         run: scripts/release.sh
-      # release.sh can exit 0 without publishing (bash 3.2 does that on a
-      # parse error), so check the result instead of trusting the exit code.
+      # Backstop: check the result instead of trusting release.sh's exit code.
       - name: Verify the release and the cask
         env:
           VERSION: ${{ needs.plan.outputs.version }}
