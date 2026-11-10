@@ -52,7 +52,11 @@ Each at a fixed size, on a fixed clock and with private `UserDefaults`.
 
 **Reference environment: macOS 27, light appearance.** For simplicity the
 snapshots cover the light appearance only and the references are recorded on
-macOS 27; there is no CI, so they are only as reliable as that match. On
+macOS 27, so they are only as reliable as that match. The Release workflow
+runs on a GitHub runner, which renders the same views with different pixels
+(macOS 27.0.1 and Xcode 27.2 still failed all 11), so `scripts/release.sh`
+runs `swift test --skip SnapshotTests`: run the full `swift test` before
+releasing. On
 another macOS version expect failures unrelated to your change: re-record on
 macOS 27 or note the new version here when re-recording for everyone.
 
