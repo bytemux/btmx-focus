@@ -20,7 +20,7 @@ struct StatusItemPresentationTests {
         let rest = StatusItemPresentation(
             engine: TimerEngine(state: .running(.rest, endDate: t0 + 60)), preferences: Preferences(), now: t0
         )
-        #expect(rest.icon == .symbol("cup.and.saucer.fill"))
+        #expect(rest.icon == .symbol("tree.fill"))
         #expect(rest.runningColor == .systemGreen)
     }
 
@@ -45,7 +45,7 @@ struct StatusItemPresentationTests {
         let rest = StatusItemPresentation(
             engine: TimerEngine(state: .ready(.rest)), preferences: Preferences(), now: t0
         )
-        #expect(rest.icon == .symbol("cup.and.saucer"))
+        #expect(rest.icon == .symbol("tree"))
     }
 
     @Test func pausedShowsFrozenTimeWithPauseSymbolAndNoColour() {

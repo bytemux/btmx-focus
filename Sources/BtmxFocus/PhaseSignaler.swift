@@ -55,17 +55,35 @@ final class PhaseSignaler: PhaseSignalSink {
         if let sound {
             soundPlayer.play(sound, volume: preferences.volume)
         }
-        postNotification(PhaseNotification(completion))
+        postNotification(PhaseNotification(completion), artwork: completion.next == .focus ? nil : BreakArtwork.png)
         CrashLog.record("signal: \(sound ?? "no") sound\(notificationCenter == nil ? "" : " + notification")")
     }
 
-    private func postNotification(_ notification: PhaseNotification) {
+    /// `artwork` (the break tree) is shown as the notification's image.
+    private func postNotification(_ notification: PhaseNotification, artwork: Data?) {
         guard let center = notificationCenter else { return }
         let content = UNMutableNotificationContent()
         content.title = notification.title
         content.body = notification.body
+        if let artwork, let attachment = Self.attachment(artwork) {
+            content.attachments = [attachment]
+        }
         let request = UNNotificationRequest(identifier: "phase-end", content: content, trigger: nil)
         center.add(request)
+    }
+
+    /// The notification center moves an attachment's file into its own
+    /// store, so each notification gets a fresh copy in the sandbox's
+    /// temporary folder.
+    private static func attachment(_ png: Data) -> UNNotificationAttachment? {
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("break-\(UUID().uuidString).png")
+        do {
+            try png.write(to: url)
+            return try UNNotificationAttachment(identifier: "break", url: url)
+        } catch {
+            CrashLog.record("notification image failed: \(error.localizedDescription)")
+            return nil
+        }
     }
 }
 

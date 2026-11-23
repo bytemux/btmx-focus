@@ -5,12 +5,20 @@ import SwiftUI
 
 public struct PopoverView: View {
     let model: TimerModel
-    /// Settings → Intervals → Target per day, for "Today n/target".
+    /// Settings → Intervals → Target per day, for the daily dots.
     let dailyTarget: Int
     let openSettings: () -> Void
     /// Esc: closes the popover and hands the keyboard back.
     let close: () -> Void
     @AppStorage(CrashLog.debugLoggingKey) private var debugLogging = false
+    /// While the clock is being edited: the time it froze at and what has
+    /// been typed so far. The timer itself keeps running.
+    @State private var edit: ClockEdit?
+
+    struct ClockEdit: Equatable {
+        var frozen: String
+        var typed = ""
+    }
 
     public init(
         model: TimerModel, dailyTarget: Int, openSettings: @escaping () -> Void, close: @escaping () -> Void = {}
@@ -39,39 +47,34 @@ public struct PopoverView: View {
                     .foregroundStyle(.secondary)
                     .accessibilityIdentifier(AccessibilityID.Popover.phase)
 
-                Text(model.clockText)
-                    .font(.system(size: 38, weight: .light, design: .rounded).monospacedDigit())
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.5)
-                    .frame(maxWidth: 140)
-                    .accessibilityLabel(
-                        PhaseStyle.accessibilityLabel(state: model.state, remaining: model.remaining)
-                    )
-                    .accessibilityIdentifier(AccessibilityID.Popover.clock)
+                clock
 
-                Button(action: model.togglePlayPause) {
+                Button {
+                    commitEdit()
+                    model.togglePlayPause()
+                } label: {
                     Image(systemName: model.isRunning ? "pause.fill" : "play.fill")
                         .font(.system(size: 24))
                         .frame(width: 56, height: 40)
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
-                .keyboardShortcut(.defaultAction)
+                // Return sets the typed time while editing, not Play.
+                .keyboardShortcut(edit == nil ? .defaultAction : nil)
                 .accessibilityLabel(model.isRunning ? Text("Pause") : Text("Play"))
                 .accessibilityIdentifier(AccessibilityID.Popover.playPause)
             }
             .frame(width: 200, height: 200)
             .background(ProgressRing(progress: model.progress, color: ringColor))
 
-            Text("Today \(model.todayCount)/\(dailyTarget)")
-                .font(.callout.monospacedDigit())
-                .foregroundStyle(.secondary)
+            DailyDots(count: model.todayCount, target: dailyTarget, focusedTime: model.todayFocusedTime)
                 .accessibilityIdentifier(AccessibilityID.Popover.today)
 
             Divider()
 
             HStack {
                 Button {
+                    commitEdit()
                     model.skip()
                 } label: {
                     Label("Skip to \(PhaseStyle.name(of: model.state.phase.next))", systemImage: "forward.end.fill")
@@ -79,6 +82,7 @@ public struct PopoverView: View {
                 .accessibilityIdentifier(AccessibilityID.Popover.skip)
 
                 Button {
+                    commitEdit()
                     model.reset()
                 } label: {
                     Label("Reset", systemImage: "arrow.counterclockwise")
@@ -121,6 +125,9 @@ public struct PopoverView: View {
         }
         .padding(16)
         .frame(width: 240)
+        // A click anywhere else in the popover sets the typed time.
+        .contentShape(Rectangle())
+        .onTapGesture { commitEdit() }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier(AccessibilityID.Popover.root)
         .focusable()
@@ -130,12 +137,91 @@ public struct PopoverView: View {
             CrashLog.record("debug logging \(enabled ? "on" : "off")")
         }
         .onKeyPress(.space) {
+            // While editing a space separates, as in "15 30" or "1h 30m".
+            guard edit == nil else { return type(" ") }
             model.togglePlayPause()
             return .handled
         }
         .onKeyPress(.escape) {
-            close()
+            // Esc while editing keeps the time as it was.
+            if edit != nil {
+                edit = nil
+            } else {
+                close()
+            }
             return .handled
+        }
+        .onKeyPress(.return) {
+            guard edit != nil else { return .ignored }
+            commitEdit()
+            return .handled
+        }
+        .onKeyPress(.delete) {
+            guard edit != nil else { return .ignored }
+            edit?.typed = String(edit?.typed.dropLast() ?? "")
+            return .handled
+        }
+        // Digits, separators and unit letters ("25m", "1ч 15м"); see ClockEntry.
+        .onKeyPress(characters: CharacterSet(charactersIn: ":.,").union(.decimalDigits).union(.letters)) { press in
+            edit == nil ? .ignored : type(press.characters)
+        }
+        // Closing the popover is clicking away too.
+        .onDisappear { commitEdit() }
+    }
+
+    /// The clock, a button: a click freezes the shown time and lets the user
+    /// type a new one (`ClockEntry`); Return or a click elsewhere sets it.
+    private var clock: some View {
+        Button {
+            if edit == nil {
+                edit = ClockEdit(frozen: model.clockText)
+            } else {
+                commitEdit()
+            }
+        } label: {
+            Text(clockShown)
+                .font(.system(size: 38, weight: .light, design: .rounded).monospacedDigit())
+                .foregroundStyle(edit == nil ? .primary : Color.accentColor)
+                .lineLimit(1)
+                .minimumScaleFactor(0.5)
+                .frame(maxWidth: 140)
+                .padding(.horizontal, 6)
+                .background {
+                    if edit != nil {
+                        RoundedRectangle(cornerRadius: 8).fill(Color.accentColor.opacity(0.12))
+                    }
+                }
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .help("Click to type a new time")
+        .accessibilityLabel(PhaseStyle.accessibilityLabel(state: model.state, remaining: model.remaining))
+        .accessibilityHint(Text("Type a new time, then press Return"))
+        .accessibilityIdentifier(AccessibilityID.Popover.clock)
+    }
+
+    /// The live time; while editing the frozen time, then the typed time as
+    /// it will be set ("15" shows 00:15), or the raw text if it isn't one yet.
+    private var clockShown: String {
+        guard let edit else { return model.clockText }
+        guard !edit.typed.isEmpty else { return edit.frozen }
+        return ClockEntry.duration(from: edit.typed).map { ClockFormat.string(for: $0) } ?? edit.typed
+    }
+
+    /// Adds `text` to the time being typed, up to `ClockEntry.maxLength`.
+    private func type(_ text: String) -> KeyPress.Result {
+        if let typed = edit?.typed, typed.count < ClockEntry.maxLength {
+            edit?.typed = typed + text
+        }
+        return .handled
+    }
+
+    /// Sets the typed time, if it is one, and stops editing.
+    private func commitEdit() {
+        guard let current = edit else { return }
+        edit = nil
+        if let duration = ClockEntry.duration(from: current.typed) {
+            model.setRemaining(duration)
         }
     }
 }

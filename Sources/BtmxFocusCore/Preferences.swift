@@ -16,7 +16,7 @@ public struct Preferences: Sendable, Equatable {
     public var longRestMinutes = 15
     /// A long rest replaces the short one after this many completed Focus intervals.
     public var longRestEvery = 4
-    /// Completed Focus intervals per day, shown as "Today n/target".
+    /// Completed Focus intervals per day, shown as the daily dots.
     public var dailyTarget = 10
     public var showTimerInMenuBar = true
     public var skipBreakIfIdle = true

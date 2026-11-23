@@ -28,6 +28,18 @@ struct SnapshotTests {
         assertSnapshot(of: view, size: CGSize(width: 240, height: 308), named: state.rawValue)
     }
 
+    @Test(arguments: DotsCase.allCases)
+    func dailyDots(dots: DotsCase) {
+        let view = DailyDots(count: dots.count, target: dots.target, focusedTime: dots.focusedTime)
+        assertSnapshot(of: view, size: CGSize(width: 240, height: 44), named: dots.rawValue)
+    }
+
+    @Test func breakArtwork() {
+        let view = NSImageView(image: BreakArtwork.image)
+        view.frame = CGRect(origin: .zero, size: BreakArtwork.image.size)
+        assertSnapshot(of: backed(view), as: .image(perceptualPrecision: 0.98))
+    }
+
     /// Each tab's content without the tab bar, which offscreen rendering
     /// can't draw (its selected segment comes out blank).
     @Test(arguments: SettingsTab.allCases)
@@ -52,6 +64,20 @@ struct SnapshotTests {
         presentation.apply(to: button)
         assertSnapshot(of: backed(button), as: .image(perceptualPrecision: 0.98), named: name)
     }
+}
+
+/// Today's dots: none yet, a few, over the target, and a target too large
+/// for full-size dots.
+enum DotsCase: String, CaseIterable {
+    case none
+    case some
+    case over
+    case manySmall
+
+    var count: Int { [0, 3, 12, 7][index] }
+    var target: Int { [10, 10, 10, 20][index] }
+    var focusedTime: Duration { .seconds([0, 5700, 21900, 12600][index]) }
+    private var index: Int { Self.allCases.firstIndex(of: self)! }
 }
 
 enum PopoverState: String, CaseIterable {
