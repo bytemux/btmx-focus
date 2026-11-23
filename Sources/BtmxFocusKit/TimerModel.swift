@@ -112,6 +112,20 @@ public final class TimerModel {
         apply("set time \(ClockFormat.string(for: remaining))") { $0.setRemaining(remaining, now: $1) }
     }
 
+    /// Nothing to clear while today has no Focus intervals or focused time.
+    public var canResetToday: Bool { todayCount > 0 || todayFocusedTime > .zero }
+
+    /// Reset today: the daily dots and Focus Time start again from zero. A
+    /// Running Focus keeps counting from now. The timer itself is untouched.
+    public func resetToday() {
+        let date = clock.now
+        CrashLog.record("reset today: \(todayCount) intervals, \(ClockFormat.string(for: todayFocusedTime)) → 0")
+        tally.resetDay(at: date)
+        if focusSince != nil {
+            focusSince = date
+        }
+    }
+
     /// New phase lengths from Settings: a Ready phase shows its new length at
     /// once; a Running or Paused phase whose length changed goes back to Ready.
     public func setSchedule(_ schedule: Schedule) {

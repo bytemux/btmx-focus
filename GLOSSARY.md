@@ -92,6 +92,12 @@ _Avoid_: next, advance
 Returns to Ready Focus at full length.
 _Avoid_: stop, restart
 
+**Reset today**:
+Clears today's daily tally (the daily dots and Focus Time) back to zero,
+from the button after Skip and Reset ("Reset Today's Progress"). The timer
+is untouched; a Running Focus keeps counting from that moment.
+_Avoid_: clear history, reset stats
+
 **Sleep reset**:
 The Reset the app performs when the Mac goes to sleep, under the default
 sleep behaviour.

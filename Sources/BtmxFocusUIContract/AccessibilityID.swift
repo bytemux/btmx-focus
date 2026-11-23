@@ -10,6 +10,7 @@ public enum AccessibilityID {
         public static let playPause = "btmx.popover.playPause"
         public static let skip = "btmx.popover.skip"
         public static let reset = "btmx.popover.reset"
+        public static let resetToday = "btmx.popover.resetToday"
         public static let more = "btmx.popover.more"
         public static let today = "btmx.popover.today"
     }
