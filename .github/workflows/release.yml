@@ -1,6 +1,7 @@
 # Manual release (ADR 0016): Actions → Release → Run workflow, on main.
 # The version is computed from the commits on main since the latest v* tag:
 #   breaking (`type!:` or BREAKING CHANGE) → major, feat/fix → minor, rest → patch.
+# docs: commits don't count; only docs since the tag → nothing to release.
 # No tag yet → 1.0.0. The macOS runner only starts once the plan job has a version.
 name: Release
 
@@ -42,6 +43,7 @@ jobs:
 
           breaking='^[a-zA-Z]+(\([^)]*\))?!:'
           feature='^(feat|fix)(\([^)]*\))?:'
+          docs='^docs(\([^)]*\))?:'
           level=patch
           changelog=""
           for sha in $shas; do
@@ -51,6 +53,8 @@ jobs:
             if [[ "$title" == "Merge pull request"* ]]; then
               title="$(sed -n '2,$p' <<<"$msg" | grep -v '^[[:space:]]*$' | head -n 1 || true)"
             fi
+            # Docs change no app: no version bump, no changelog line.
+            [[ "$title" =~ $docs ]] && continue
             changelog+="- ${title}"$'\n'
             if [[ "$title" =~ $breaking ]] || grep -q 'BREAKING CHANGE' <<<"$msg"; then
               level=major
@@ -58,6 +62,8 @@ jobs:
               level=minor
             fi
           done
+
+          [ -n "$changelog" ] || { echo "::error::Only docs changes since $base: nothing to release"; exit 1; }
 
           if [ -z "$base" ]; then
             version=1.0.0

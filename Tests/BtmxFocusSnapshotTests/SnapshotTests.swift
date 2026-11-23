@@ -28,6 +28,37 @@ struct SnapshotTests {
         assertSnapshot(of: view, size: CGSize(width: 240, height: 308), named: state.rawValue)
     }
 
+    /// The README's popover image, `docs/images/readme.popover.png`: a
+    /// snapshot like the others, so a popover change fails it and
+    /// `SNAPSHOT_RECORD=1 swift test` re-records it with the rest. Focus
+    /// running, a few intervals and some focus time done today.
+    @Test func readmePopover() async {
+        let (defaults, _) = freshDefaults()
+        var tally = DailyTally()
+        let morning = TimerHarness.t0 - 3 * 3600
+        tally.recordFocusedTime(from: morning, to: morning + 5700, calendar: TimerHarness.calendar)
+        for _ in 0 ..< 3 {
+            tally.recordFocusInterval(at: morning + 5700, calendar: TimerHarness.calendar)
+        }
+        tally.save(to: defaults)
+        let harness = TimerHarness(defaults: defaults)
+        await PopoverState.runningFocus.drive(harness)
+        let view = PopoverView(model: harness.model, dailyTarget: 10, openSettings: {})
+            .defaultAppStorage(freshDefaults().defaults)
+        let host = NSHostingView(rootView: view)
+        host.frame = CGRect(x: 0, y: 0, width: 240, height: 308)
+        let images = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+            .appendingPathComponent("docs/images").path
+        let failure = verifySnapshot(
+            of: backed(host), as: .image(perceptualPrecision: 0.98), named: "popover",
+            snapshotDirectory: images, testName: "readme"
+        )
+        if let failure {
+            Issue.record(Comment(rawValue: failure))
+        }
+    }
+
     @Test(arguments: DotsCase.allCases)
     func dailyDots(dots: DotsCase) {
         let view = DailyDots(count: dots.count, target: dots.target, focusedTime: dots.focusedTime)
