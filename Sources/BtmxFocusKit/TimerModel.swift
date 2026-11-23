@@ -64,7 +64,7 @@ public final class TimerModel {
     public var clockText: String { ClockFormat.string(for: remaining) }
     /// Elapsed fraction of the phase, for the progress ring.
     public var progress: Double { engine.progress(at: now) }
-    /// "Today n/target": read at the real time, so a popover opened after
+    /// The filled daily dots: read at the real time, so a popover opened after
     /// midnight shows 0 even if the timer sat Ready since yesterday.
     public var todayCount: Int { tally.count(on: clock.now, calendar: calendar) }
     /// Focused time today, including the Focus running right now (from midnight

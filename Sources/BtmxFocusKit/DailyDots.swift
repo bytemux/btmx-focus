@@ -1,8 +1,8 @@
 import SwiftUI
 
 /// Today's progress under the ring: one dot per Focus interval of the daily
-/// target, filled as they are completed (●●●○○○○○○○ is 3 of 10), with the
-/// count and today's focused time beneath. Intervals over the target show
+/// target, filled as they are completed (●●●○○○○○○○ is 3 of 10), with
+/// today's focused time beneath ("Focus Time: 1h 35m"). Intervals over the target show
 /// as "+n" after the dots.
 public struct DailyDots: View {
     let count: Int
@@ -39,12 +39,12 @@ public struct DailyDots: View {
                         .foregroundStyle(.green)
                 }
             }
-            Text("Today \(count)/\(target) · \(Self.format(focusedTime))")
+            Text("Focus Time: \(Self.format(focusedTime))")
                 .font(.callout.monospacedDigit())
                 .foregroundStyle(.secondary)
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(Text("Today \(count) of \(target), \(Self.spokenFormat(focusedTime)) focused"))
+        .accessibilityLabel(Text("Today \(count) of \(target), focus time \(Self.spokenFormat(focusedTime))"))
     }
 
     /// "1h 25m", or "25m" under an hour.

@@ -70,7 +70,8 @@ _Avoid_: timeout, completion
 **Set time**:
 Clicking the popover clock freezes the shown time and lets the user type a
 new remaining time: digits read like a microwave (`15` is 00:15, `1515` is
-15:15) or with a colon (`15:0` is 15:00). Return or a click elsewhere sets
+15:15), split by a colon, dot or space (`15:0`, `15 0` are 15:00), or with
+units in English or Russian (`25m`, `1h30`, `1ч 15м`). Return or a click elsewhere sets
 it, Esc keeps the old time. The timer keeps running while the user types; a
 Running phase runs on from the new time, a Ready or Paused one is Paused
 with it. The progress ring then measures against the time set.
@@ -116,13 +117,13 @@ that moment.
 _Avoid_: away mode, auto-skip
 
 **Daily target**:
-The number of Focus intervals the user aims for in a day, shown as
-"Today n/target" and as the daily dots.
+The number of Focus intervals the user aims for in a day, shown as the
+daily dots.
 _Avoid_: goal, quota
 
 **Daily tally**:
-How many Focus intervals the user completed today (the n in "Today
-n/target"), not counting any that ended while the Mac slept, and today's
+How many Focus intervals the user completed today (the filled daily
+dots), not counting any that ended while the Mac slept, and today's
 focused time. It starts again at local midnight and survives quit and
 relaunch.
 _Avoid_: streak, score
@@ -130,7 +131,8 @@ _Avoid_: streak, score
 **Focused time**:
 How long Focus was Running today, including Focus phases cut short by
 Pause, Skip or Reset; never breaks or time the Mac slept. A stretch over
-midnight counts only from midnight. Shown as "1h 35m" next to the tally.
+midnight counts only from midnight. Shown as "Focus Time: 1h 35m" under
+the daily dots.
 _Avoid_: work time, screen time
 
 **Daily dots**:

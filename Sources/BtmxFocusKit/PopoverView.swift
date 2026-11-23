@@ -5,7 +5,7 @@ import SwiftUI
 
 public struct PopoverView: View {
     let model: TimerModel
-    /// Settings → Intervals → Target per day, for "Today n/target".
+    /// Settings → Intervals → Target per day, for the daily dots.
     let dailyTarget: Int
     let openSettings: () -> Void
     /// Esc: closes the popover and hands the keyboard back.
@@ -137,7 +137,8 @@ public struct PopoverView: View {
             CrashLog.record("debug logging \(enabled ? "on" : "off")")
         }
         .onKeyPress(.space) {
-            guard edit == nil else { return .handled }
+            // While editing a space separates, as in "15 30" or "1h 30m".
+            guard edit == nil else { return type(" ") }
             model.togglePlayPause()
             return .handled
         }
@@ -160,15 +161,9 @@ public struct PopoverView: View {
             edit?.typed = String(edit?.typed.dropLast() ?? "")
             return .handled
         }
-        .onKeyPress(characters: CharacterSet(charactersIn: "0123456789:.,")) { press in
-            guard var current = edit else { return .ignored }
-            // "." and "," also separate minutes and seconds.
-            let typed = press.characters.replacingOccurrences(of: "[.,]", with: ":", options: .regularExpression)
-            if current.typed.count < ClockEntry.maxLength {
-                current.typed += typed
-                edit = current
-            }
-            return .handled
+        // Digits, separators and unit letters ("25m", "1ч 15м"); see ClockEntry.
+        .onKeyPress(characters: CharacterSet(charactersIn: ":.,").union(.decimalDigits).union(.letters)) { press in
+            edit == nil ? .ignored : type(press.characters)
         }
         // Closing the popover is clicking away too.
         .onDisappear { commitEdit() }
@@ -211,6 +206,14 @@ public struct PopoverView: View {
         guard let edit else { return model.clockText }
         guard !edit.typed.isEmpty else { return edit.frozen }
         return ClockEntry.duration(from: edit.typed).map { ClockFormat.string(for: $0) } ?? edit.typed
+    }
+
+    /// Adds `text` to the time being typed, up to `ClockEntry.maxLength`.
+    private func type(_ text: String) -> KeyPress.Result {
+        if let typed = edit?.typed, typed.count < ClockEntry.maxLength {
+            edit?.typed = typed + text
+        }
+        return .handled
     }
 
     /// Sets the typed time, if it is one, and stops editing.
