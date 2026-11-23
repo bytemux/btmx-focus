@@ -1,11 +1,15 @@
-# Manual release (ADR 0016): Actions → Release → Run workflow, on main.
+# Release (ADR 0016, 0017): runs on every push to main (a merged PR), or by
+# hand from Actions → Release → Run workflow.
 # The version is computed from the commits on main since the latest v* tag:
 #   breaking (`type!:` or BREAKING CHANGE) → major, feat/fix → minor, rest → patch.
-# docs: commits don't count; only docs since the tag → nothing to release.
-# No tag yet → 1.0.0. The macOS runner only starts once the plan job has a version.
+# docs: and chore: commits don't count; with nothing else since the tag the
+# run ends green without releasing. No tag yet → 1.0.0. The macOS runner only
+# starts once the plan job has a version.
 name: Release
 
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
     inputs:
       dry_run:
@@ -39,11 +43,15 @@ jobs:
           range=HEAD
           [ -z "$base" ] || range="$base..HEAD"
           shas="$(git rev-list --first-parent "$range")"
-          [ -n "$shas" ] || { echo "::error::Nothing to release since $base"; exit 1; }
+          if [ -z "$shas" ]; then
+            echo "::notice::Nothing to release since $base"
+            exit 0
+          fi
 
           breaking='^[a-zA-Z]+(\([^)]*\))?!:'
           feature='^(feat|fix)(\([^)]*\))?:'
-          docs='^docs(\([^)]*\))?:'
+          # Changes that ship nothing in the app.
+          no_release='^(docs|chore)(\([^)]*\))?:'
           level=patch
           changelog=""
           for sha in $shas; do
@@ -53,8 +61,8 @@ jobs:
             if [[ "$title" == "Merge pull request"* ]]; then
               title="$(sed -n '2,$p' <<<"$msg" | grep -v '^[[:space:]]*$' | head -n 1 || true)"
             fi
-            # Docs change no app: no version bump, no changelog line.
-            [[ "$title" =~ $docs ]] && continue
+            # No version bump, no changelog line.
+            [[ "$title" =~ $no_release ]] && continue
             changelog+="- ${title}"$'\n'
             if [[ "$title" =~ $breaking ]] || grep -q 'BREAKING CHANGE' <<<"$msg"; then
               level=major
@@ -63,7 +71,10 @@ jobs:
             fi
           done
 
-          [ -n "$changelog" ] || { echo "::error::Only docs changes since $base: nothing to release"; exit 1; }
+          if [ -z "$changelog" ]; then
+            echo "::notice::Only docs and chore changes since $base: nothing to release"
+            exit 0
+          fi
 
           if [ -z "$base" ]; then
             version=1.0.0
@@ -93,7 +104,8 @@ jobs:
 
   release:
     needs: plan
-    if: ${{ !inputs.dry_run }}
+    # No version: nothing to release. dry_run is only set by hand.
+    if: ${{ needs.plan.outputs.version != '' && !inputs.dry_run }}
     runs-on: macos-26
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0

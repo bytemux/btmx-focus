@@ -28,11 +28,14 @@ On `/implement` or "implement spec", start from fresh main:
 
 ## Pull requests
 
-The PR title becomes the merge commit's title, and the Release workflow
-reads the version bump from it (`docs/building.md` → Releasing). Start it
-with a conventional type: `feat:` or `fix:` (minor), `type!:` (major),
-`docs:` (no release), anything else such as `ci:`, `chore:`, `test:`
-(patch).
+The PR title becomes the merge commit's title, and the Release workflow,
+which runs on every merge to main, reads the version bump from it
+(`docs/building.md` → Releasing). Start it with a conventional type:
+`feat:` or `fix:` (minor), `type!:` (major), `docs:` or `chore:` (no
+release), anything else such as `ci:`, `test:`, `refactor:` (patch).
+
+Don't stack PRs (base one PR on another's branch): if the base merges
+first, the stacked one merges into that branch and never reaches main.
 
 ## Testing the UI
 

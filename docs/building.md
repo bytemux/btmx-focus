@@ -127,13 +127,17 @@ swiftlint                # config: .swiftlint.yml
 Releases are unsigned DMGs on GitHub Releases, installed through our
 Homebrew tap `bytemux/homebrew-tap` (ADR 0016).
 
-1. Run the E2E suite and the manual check below.
-2. Merge everything to main, then Actions → Release → Run workflow. It
+Every merge to main releases (ADR 0017), so main is always releasable:
+
+1. Before merging a `feat` or `fix` PR, run the E2E suite and the manual
+   check below.
+2. Merge the PR. The Release workflow runs on every push to main (Actions →
+   Release → Run workflow runs it by hand). It
    computes the version from the commits since the latest `v*` tag
    (`type!:` or `BREAKING CHANGE` → major, `feat`/`fix` → minor, anything
-   else → patch; no tag yet → 1.0.0). `docs:` commits don't count: they
-   stay out of the changelog, and with nothing else since the tag there is
-   nothing to release. Then, on a macOS runner, it runs the tests,
+   else → patch; no tag yet → 1.0.0). `docs:` and `chore:` commits don't
+   count: they stay out of the changelog, and with nothing else since the
+   tag the run ends green without a release. Then, on a macOS runner, it runs the tests,
    builds `btmx-focus-<version>.dmg`, creates the release `v<version>` and
    pushes the new version and checksum to `Casks/btmx-focus.rb` in the tap.
    "Dry run" only prints the version and changelog. Nobody edits the
@@ -154,7 +158,7 @@ tests and run the `BtmxFocus` scheme. Running from Xcode works like
 
 ## Manual MVP check
 
-Before a release (step 1 above), run `scripts/e2e.sh` for the critical path
+Before merging a `feat` or `fix` PR (step 1 above), run `scripts/e2e.sh` for the critical path
 (`docs/testing.md`). What it doesn't cover, check by hand with the bundled
 app:
 

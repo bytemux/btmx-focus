@@ -16,7 +16,8 @@ disables casks that fail Gatekeeper, and Homebrew 5 dropped
 
 - Each release is a GitHub Release `v<version>` with
   `btmx-focus-<version>.dmg`, built by `scripts/release.sh` from main in
-  the manually dispatched Release workflow. The workflow computes the
+  the Release workflow (dispatched by hand; since ADR 0017, on every
+  merge to main). The workflow computes the
   version from the commits since the latest tag (breaking → major,
   feat/fix → minor, else patch; first release 1.0.0); the macOS runner
   only starts when there is something to release.
