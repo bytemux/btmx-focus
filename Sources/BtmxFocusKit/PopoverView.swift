@@ -77,8 +77,9 @@ public struct PopoverView: View {
                     commitEdit()
                     model.skip()
                 } label: {
-                    Label("Skip to \(PhaseStyle.name(of: model.state.phase.next))", systemImage: "forward.end.fill")
+                    Label(skipName, systemImage: "forward.end.fill")
                 }
+                .help(skipName)
                 .accessibilityIdentifier(AccessibilityID.Popover.skip)
 
                 Button {
@@ -88,7 +89,21 @@ public struct PopoverView: View {
                     Label("Reset", systemImage: "arrow.counterclockwise")
                 }
                 .disabled(!model.canReset)
+                .help("Reset")
                 .accessibilityIdentifier(AccessibilityID.Popover.reset)
+
+                Divider()
+                    .frame(height: 14)
+
+                Button {
+                    commitEdit()
+                    model.resetToday()
+                } label: {
+                    Label("Reset Today's Progress", systemImage: "calendar.badge.minus")
+                }
+                .disabled(!model.canResetToday)
+                .help("Reset Today's Progress")
+                .accessibilityIdentifier(AccessibilityID.Popover.resetToday)
 
                 Spacer()
 
@@ -116,12 +131,12 @@ public struct PopoverView: View {
                 .menuStyle(.borderlessButton)
                 .menuIndicator(.hidden)
                 .fixedSize()
+                .help("More")
                 .accessibilityLabel(Text("More"))
                 .accessibilityIdentifier(AccessibilityID.Popover.more)
             }
             .buttonStyle(.borderless)
             .labelStyle(.iconOnly)
-            .help("Skip, reset, settings or quit")
         }
         .padding(16)
         .frame(width: 240)
@@ -167,6 +182,11 @@ public struct PopoverView: View {
         }
         // Closing the popover is clicking away too.
         .onDisappear { commitEdit() }
+    }
+
+    /// "Skip to Rest", "Skip to Focus": the Skip button's name and tooltip.
+    private var skipName: String {
+        String(localized: "Skip to \(PhaseStyle.name(of: model.state.phase.next))")
     }
 
     /// The clock, a button: a click freezes the shown time and lets the user

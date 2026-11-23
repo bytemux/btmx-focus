@@ -73,3 +73,29 @@ struct FocusedTimeTests {
         #expect(harness.model.todayFocusedTime == .seconds(45))
     }
 }
+
+/// Reset Today's Progress: the dots and Focus Time start again, the timer doesn't.
+@MainActor
+struct ResetTodayTests {
+    @Test func clearsTheDayButKeepsARunningFocusCounting() async {
+        let harness = TimerHarness()
+        #expect(!harness.model.canResetToday)
+        harness.model.play()
+        await harness.clock.advance(by: 1800)
+        harness.model.skip()
+        harness.model.play()
+        await harness.clock.advance(by: 600)
+        #expect(harness.model.todayCount == 1)
+        #expect(harness.model.canResetToday)
+
+        harness.model.resetToday()
+        #expect(harness.model.todayCount == 0)
+        #expect(harness.model.todayFocusedTime == .zero)
+        #expect(harness.model.state == .running(.focus, endDate: TimerHarness.t0 + 3600))
+
+        await harness.clock.advance(by: 60)
+        #expect(harness.model.todayFocusedTime == .seconds(60))
+        // Saved: a relaunch doesn't bring the old day back.
+        #expect(TimerHarness(defaults: harness.defaults).model.todayCount == 0)
+    }
+}

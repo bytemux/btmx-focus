@@ -35,6 +35,13 @@ public struct DailyTally: Sendable, Equatable {
         focusedSeconds += end.timeIntervalSince(from)
     }
 
+    /// Today starts over: no Focus intervals, no focused time.
+    public mutating func resetDay(at date: Date) {
+        day = date
+        count = 0
+        focusedSeconds = 0
+    }
+
     private func isToday(_ date: Date, _ calendar: Calendar) -> Bool {
         guard let day else { return false }
         return calendar.isDate(day, inSameDayAs: date)
