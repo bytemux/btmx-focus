@@ -72,7 +72,9 @@ SNAPSHOT_RECORD=1 swift test --filter BtmxFocusSnapshotTests
 ```
 
 then look at the changed PNGs (`git diff --stat`, open them) before
-committing. Expect to re-record after macOS updates, which change how system
+committing. The README's popover image, `docs/images/readme.popover.png`,
+is one of these snapshots (`readmePopover`), so it fails and re-records
+with the popover and never goes stale. Expect to re-record after macOS updates, which change how system
 controls render. A new test with no reference records one and fails once;
 run it again.
 

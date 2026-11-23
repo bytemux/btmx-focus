@@ -131,7 +131,9 @@ Homebrew tap `bytemux/homebrew-tap` (ADR 0016).
 2. Merge everything to main, then Actions → Release → Run workflow. It
    computes the version from the commits since the latest `v*` tag
    (`type!:` or `BREAKING CHANGE` → major, `feat`/`fix` → minor, anything
-   else → patch; no tag yet → 1.0.0), then on a macOS runner runs the tests,
+   else → patch; no tag yet → 1.0.0). `docs:` commits don't count: they
+   stay out of the changelog, and with nothing else since the tag there is
+   nothing to release. Then, on a macOS runner, it runs the tests,
    builds `btmx-focus-<version>.dmg`, creates the release `v<version>` and
    pushes the new version and checksum to `Casks/btmx-focus.rb` in the tap.
    "Dry run" only prints the version and changelog. Nobody edits the

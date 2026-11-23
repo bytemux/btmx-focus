@@ -3,7 +3,7 @@
 A native macOS menu-bar focus timer: 30 minutes of focus, 5 minutes of rest, one click away.
 
 <p align="center">
-  <img src="docs/images/popover.png" alt="The btmx-focus popover: a progress ring around Focus, 24:13 and the pause button, with Today 0/10 below" width="240">
+  <img src="docs/images/readme.popover.png" alt="The btmx-focus popover: a progress ring around Focus, 24:13 and the pause button, with three of ten daily dots filled and Focus Time: 1h 40m below" width="240">
 </p>
 
 ## Install

@@ -26,6 +26,14 @@ On `/implement` or "implement spec", start from fresh main:
 `git stash -u` if the working tree is dirty (don't ask), then
 `git switch main && git pull --ff-only`, then branch.
 
+## Pull requests
+
+The PR title becomes the merge commit's title, and the Release workflow
+reads the version bump from it (`docs/building.md` → Releasing). Start it
+with a conventional type: `feat:` or `fix:` (minor), `type!:` (major),
+`docs:` (no release), anything else such as `ci:`, `chore:`, `test:`
+(patch).
+
 ## Testing the UI
 
 `swift test` always. The E2E suite (`scripts/e2e.sh`) and `focus-drive`
@@ -35,6 +43,10 @@ review the screenshots it saves (`build/e2e/<timestamp>/`). To look at the
 running UI, use `focus-drive`. Otherwise verify with `swift test`, a clean
 build and the logs, and tell the user what to check by hand
 (`docs/building.md`).
+
+A popover change also changes the README image
+(`docs/images/readme.popover.png`): it's a snapshot, re-recorded with the
+others; commit it with the change.
 
 The E2E suite covers the critical path only (ADR 0010): extend its two
 flows, and cover buttons and edge cases in unit or snapshot tests.
