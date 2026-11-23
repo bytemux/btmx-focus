@@ -105,7 +105,20 @@ public enum TimerEvent: Sendable, Equatable {
 /// Pure focus/rest state machine. Every time-dependent call takes `now`,
 /// so callers (and tests) control the clock.
 public struct TimerEngine: Sendable, Equatable {
-    public private(set) var state: TimerState
+    public private(set) var state: TimerState {
+        didSet {
+            // A time set by hand lasts until the phase changes or is Ready again.
+            let isReady = if case .ready = state { true } else { false }
+            if isReady || state.phase != oldValue.phase {
+                setLength = nil
+            }
+        }
+    }
+
+    /// The remaining time the user last set by hand for this phase
+    /// (`setRemaining`), the full length the progress ring measures against;
+    /// `nil` means the schedule's length.
+    public private(set) var setLength: Duration?
     /// Takes effect at once for a Ready phase. A Running or Paused phase whose
     /// own length changes goes back to Ready at the new length; one whose
     /// length stays keeps its deadline or remaining time.
@@ -146,6 +159,19 @@ public struct TimerEngine: Sendable, Equatable {
     public mutating func pause(now: Date) {
         guard case let .running(phase, _) = state else { return }
         state = .paused(phase, remaining: remaining(at: now))
+    }
+
+    /// Sets the time left by hand. A Running phase keeps running towards a
+    /// new deadline; a Ready or Paused one is Paused with that time, waiting
+    /// for Play.
+    public mutating func setRemaining(_ remaining: Duration, now: Date) {
+        switch state {
+        case let .running(phase, _):
+            state = .running(phase, endDate: now + remaining)
+        case let .ready(phase), let .paused(phase, _):
+            state = .paused(phase, remaining: remaining)
+        }
+        setLength = remaining
     }
 
     public mutating func skip() {
@@ -220,10 +246,11 @@ public struct TimerEngine: Sendable, Equatable {
         }
     }
 
-    /// How much of the current phase has elapsed, from 0 (Ready) to 1 (at the
-    /// deadline). The progress ring shows the rest, `1 - progress`.
+    /// How much of the current phase has elapsed, from 0 (Ready, or just set
+    /// by hand) to 1 (at the deadline). The progress ring shows the rest,
+    /// `1 - progress`.
     public func progress(at now: Date) -> Double {
-        let total = schedule.duration(of: state.phase).timeInterval
+        let total = (setLength ?? schedule.duration(of: state.phase)).timeInterval
         guard total > 0 else { return 0 }
         return min(1, max(0, 1 - remaining(at: now).timeInterval / total))
     }

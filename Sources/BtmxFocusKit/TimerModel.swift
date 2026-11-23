@@ -9,10 +9,14 @@ public final class TimerModel {
     public private(set) var engine: TimerEngine
     /// Last time the display was refreshed; views derive the remaining time from it.
     public private(set) var now: Date
-    /// Focus intervals completed today, saved on every change.
+    /// Focus intervals and focused time today, saved on every change.
     public private(set) var tally: DailyTally {
         didSet { tally.save(to: defaults) }
     }
+
+    /// When the current stretch of Running Focus started counting towards
+    /// today's focused time; `nil` unless Focus is Running and the Mac awake.
+    private var focusSince: Date?
 
     @ObservationIgnored private let clock: TimerClock
     @ObservationIgnored private let signaler: PhaseSignalSink
@@ -63,6 +67,16 @@ public final class TimerModel {
     /// "Today n/target": read at the real time, so a popover opened after
     /// midnight shows 0 even if the timer sat Ready since yesterday.
     public var todayCount: Int { tally.count(on: clock.now, calendar: calendar) }
+    /// Focused time today, including the Focus running right now (from midnight
+    /// at most).
+    public var todayFocusedTime: Duration {
+        let date = clock.now
+        let current = focusSince.map { start in
+            max(0, date.timeIntervalSince(max(start, calendar.startOfDay(for: date))))
+        } ?? 0
+        return tally.focusedTime(on: date, calendar: calendar) + .seconds(current)
+    }
+
     public var isRunning: Bool { if case .running = state { true } else { false } }
     /// Nothing to reset back to at the start of a focus phase.
     public var canReset: Bool { state != .ready(.focus) }
@@ -92,6 +106,12 @@ public final class TimerModel {
         apply("reset") { engine, _ in engine.reset() }
     }
 
+    /// The time typed into the popover clock. Running keeps running from it;
+    /// Ready or Paused is Paused with it.
+    public func setRemaining(_ remaining: Duration) {
+        apply("set time \(ClockFormat.string(for: remaining))") { $0.setRemaining(remaining, now: $1) }
+    }
+
     /// New phase lengths from Settings: a Ready phase shows its new length at
     /// once; a Running or Paused phase whose length changed goes back to Ready.
     public func setSchedule(_ schedule: Schedule) {
@@ -116,8 +136,13 @@ public final class TimerModel {
     private func apply(_ action: String, _ change: (inout TimerEngine, Date) -> Void) {
         let date = clock.now
         let before = describe(at: date)
+        let stateBefore = engine.state
         change(&engine, date)
         now = date
+        if engine.state != stateBefore, case let .running(.focus, deadline) = stateBefore {
+            endFocusStretch(at: min(date, deadline))
+        }
+        startFocusStretchIfRunning(at: date)
         CrashLog.record("\(action): \(before) → \(describe(at: date))")
         scheduleTicks()
     }
@@ -154,14 +179,32 @@ public final class TimerModel {
             return idleTime
         }(), endedWhileAsleep: asleepSince != nil)
         guard case let .phaseCompleted(completion) = event else { return nil }
-        if completion.phase == .focus, asleepSince == nil {
-            tally.recordFocusInterval(at: deadline, calendar: calendar)
+        if completion.phase == .focus {
+            endFocusStretch(at: deadline)
+            if asleepSince == nil {
+                tally.recordFocusInterval(at: deadline, calendar: calendar)
+            }
         }
+        // Auto-start from a break: Focus has been running since that deadline.
+        startFocusStretchIfRunning(at: deadline)
         let skipped = completion.skippedBreak.map { phase in
             ", \(PhaseStyle.name(of: phase)) skipped (idle \(ClockFormat.string(for: idleTime)))"
         } ?? ""
         CrashLog.record("phase end: \(PhaseStyle.name(of: completion.phase))\(skipped) → \(describe(at: date))")
         return completion
+    }
+
+    /// Adds the stretch of Running Focus up to `end` to today's focused time.
+    private func endFocusStretch(at end: Date) {
+        guard let start = focusSince else { return }
+        focusSince = nil
+        tally.recordFocusedTime(from: start, to: end, calendar: calendar)
+    }
+
+    /// Time asleep isn't focused time, so a stretch starts only while awake.
+    private func startFocusStretchIfRunning(at date: Date) {
+        guard focusSince == nil, asleepSince == nil, case .running(.focus, _) = engine.state else { return }
+        focusSince = date
     }
 
     /// Wakes only when the displayed second changes (or only at the phase end
@@ -197,6 +240,8 @@ public final class TimerModel {
                 model.tick()
                 model.asleepSince = model.clock.now
                 model.apply("system sleep, \(model.engine.sleepBehaviour.rawValue)") { $0.systemWillSleep(now: $1) }
+                // Keep counting: the deadline stands, but sleep isn't focused time.
+                model.endFocusStretch(at: model.clock.now)
             }
         })
         observeVisibility(workspace, NSWorkspace.screensDidSleepNotification) { $0.displayAsleep = true }
@@ -204,7 +249,10 @@ public final class TimerModel {
         observeVisibility(distributed, .init("com.apple.screenIsLocked")) { $0.screenLocked = true }
         observeVisibility(distributed, .init("com.apple.screenIsUnlocked")) { $0.screenLocked = false }
         // A tick may not have run while asleep: catch up with the deadline (keep counting).
-        observeCatchUp(workspace, NSWorkspace.didWakeNotification, "system wake") { $0.asleepSince = nil }
+        observeCatchUp(workspace, NSWorkspace.didWakeNotification, "system wake") { model in
+            model.asleepSince = nil
+            model.startFocusStretchIfRunning(at: model.clock.now)
+        }
         observeCatchUp(local, .NSSystemClockDidChange, "system clock changed")
     }
 

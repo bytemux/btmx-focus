@@ -56,3 +56,31 @@ private func freshDefaults() -> UserDefaults {
     defaults.removePersistentDomain(forName: suite)
     return defaults
 }
+
+struct DailyFocusedTimeTests {
+    @Test func addsUpFocusedTimeWithinADay() {
+        var tally = DailyTally()
+        tally.recordFocusedTime(from: november2(9), to: november2(9, 30), calendar: calendar)
+        tally.recordFocusedTime(from: november2(10), to: november2(10, 10), calendar: calendar)
+        #expect(tally.focusedTime(on: november2(11), calendar: calendar) == .seconds(40 * 60))
+        #expect(tally.count(on: november2(11), calendar: calendar) == 0)
+    }
+
+    @Test func aStretchOverMidnightCountsOnlyAfterIt() {
+        var tally = DailyTally()
+        tally.recordFocusInterval(at: november2(20), calendar: calendar)
+        tally.recordFocusedTime(from: november2(20), to: november2(21), calendar: calendar)
+        let morning = november2(23, 50) + 30 * 60 // 00:20 on November 3
+        tally.recordFocusedTime(from: november2(23, 50), to: morning, calendar: calendar)
+        #expect(tally.focusedTime(on: morning, calendar: calendar) == .seconds(20 * 60))
+        #expect(tally.count(on: morning, calendar: calendar) == 0)
+    }
+
+    @Test func focusedTimeSurvivesReload() {
+        let defaults = freshDefaults()
+        var tally = DailyTally()
+        tally.recordFocusedTime(from: november2(9), to: november2(9, 25), calendar: calendar)
+        tally.save(to: defaults)
+        #expect(DailyTally(defaults: defaults).focusedTime(on: november2(17), calendar: calendar) == .seconds(1500))
+    }
+}

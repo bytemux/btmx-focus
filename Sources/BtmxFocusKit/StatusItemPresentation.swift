@@ -42,8 +42,8 @@ public struct StatusItemPresentation: Equatable {
         switch state {
         case .ready(.focus): .logo
         case .running(.focus, _): .symbol("timer.circle.fill")
-        case .ready(.rest), .ready(.longRest): .symbol("cup.and.saucer")
-        case .running(.rest, _), .running(.longRest, _): .symbol("cup.and.saucer.fill")
+        case .ready(.rest), .ready(.longRest): .symbol("tree")
+        case .running(.rest, _), .running(.longRest, _): .symbol("tree.fill")
         case .paused: .symbol("pause.circle")
         }
     }
