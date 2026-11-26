@@ -1,6 +1,6 @@
 # 0018. Only typed commits release; PR titles are checked
 
-Status: Accepted
+Status: Accepted, amended by 0019
 Date: 2026-11-25
 
 ## Context

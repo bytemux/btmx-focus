@@ -1,9 +1,10 @@
 # Release (ADR 0016, 0017): runs on every push to main (a merged PR), or by
 # hand from Actions → Release → Run workflow.
-# The version is computed from the commits on main since the latest v* tag:
-#   breaking (`type!:` or BREAKING CHANGE) → major, feat/fix → minor,
-#   perf/refactor/revert → patch. Other types (docs, chore, ci, test, style,
-#   build) and titles with no type don't count (ADR 0018); with nothing else
+# scripts/next-version.sh (from btmx-sdlc) computes the SemVer version from
+# the commits on main since the latest v* tag (ADR 0018, 0019):
+#   breaking (`type!:` or BREAKING CHANGE) → major, feat → minor,
+#   fix/perf/refactor/revert → patch. Other types (docs, chore, ci, test,
+#   style, build) and titles with no type don't count; with nothing else
 #   since the tag the run ends green without releasing.
 # No tag yet → 1.0.0. The macOS runner only starts once the plan job has a
 # version.
@@ -38,79 +39,7 @@ jobs:
         with:
           fetch-depth: 0
       - id: next
-        shell: bash
-        run: |
-          set -euo pipefail
-          base="$(git tag --list 'v[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | head -n 1)"
-          range=HEAD
-          [ -z "$base" ] || range="$base..HEAD"
-          shas="$(git rev-list --first-parent "$range")"
-          if [ -z "$shas" ]; then
-            echo "::notice::Nothing to release since $base"
-            exit 0
-          fi
-
-          # Types: see .github/workflows/pr-title.yml, which checks PR titles.
-          breaking='^[a-z]+(\([^)]*\))?!:'
-          feature='^(feat|fix)(\([^)]*\))?:'
-          patch_types='^(perf|refactor|revert)(\([^)]*\))?:'
-          # Changes that ship nothing in the app.
-          no_release='^(docs|chore|ci|test|style|build)(\([^)]*\))?:'
-          level=patch
-          changelog=""
-          for sha in $shas; do
-            msg="$(git log -1 --format=%B "$sha")"
-            title="$(head -n 1 <<<"$msg")"
-            # A merge commit keeps the PR title in its body.
-            if [[ "$title" == "Merge pull request"* ]]; then
-              title="$(sed -n '2,$p' <<<"$msg" | grep -v '^[[:space:]]*$' | head -n 1 || true)"
-            fi
-            if [[ "$title" =~ $breaking ]] || grep -q '^BREAKING CHANGE' <<<"$msg"; then
-              level=major
-            elif [[ "$title" =~ $feature ]]; then
-              [ "$level" = major ] || level=minor
-            elif [[ "$title" =~ $patch_types ]]; then
-              :
-            elif [[ "$title" =~ $no_release ]]; then
-              continue
-            else
-              # No type, e.g. a file committed from GitHub's web page.
-              echo "::warning::Not released, no conventional type: $title"
-              continue
-            fi
-            changelog+="- ${title}"$'\n'
-          done
-
-          if [ -z "$changelog" ]; then
-            echo "::notice::No releasable changes since ${base:-the start}"
-            exit 0
-          fi
-
-          if [ -z "$base" ]; then
-            version=1.0.0
-            level=initial
-          else
-            IFS=. read -r major minor patch <<<"${base#v}"
-            case "$level" in
-              major) version="$((major + 1)).0.0" ;;
-              minor) version="$major.$((minor + 1)).0" ;;
-              *) version="$major.$minor.$((patch + 1))" ;;
-            esac
-          fi
-
-          {
-            echo "## Release ${version}"
-            echo "Base: ${base:-none} · bump: ${level}"
-            echo
-            printf '%s' "$changelog"
-          } | tee -a "${GITHUB_STEP_SUMMARY:-/dev/null}"
-          delimiter="EOF_$RANDOM$RANDOM"
-          {
-            echo "version=$version"
-            echo "changelog<<$delimiter"
-            printf '%s' "$changelog"
-            echo "$delimiter"
-          } >>"${GITHUB_OUTPUT:-/dev/null}"
+        run: scripts/next-version.sh # from btmx-sdlc; rules: ADR 0019
 
   release:
     needs: plan

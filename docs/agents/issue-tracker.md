@@ -14,6 +14,15 @@ Issues and specs for this repo live as GitHub issues. Use the `gh` CLI for all o
 
 The repo is `bytemux/btmx-focus` (the local folder is just called `focus`). `gh` infers it from `git remote -v` when run inside a clone.
 
+## Issue types (btmx-sdlc)
+
+Every issue has an issue type: `Story`, `Task` (sub-issue of a Story), `Bug` or `Spike`. Create issues with skill:issue (see AGENTS.md → "How to develop in this repo").
+
+- A `/to-spec` Spec issue is a `Story`; each `/to-tickets` ticket is a `Task` (it is already a sub-issue of the Spec).
+- 1 Task, Bug or Spike = 1 branch `<type>/<n>-<slug>` = 1 PR with `Closes #<n>`.
+- Triage labels (`docs/agents/triage-labels.md`) stay; they add the state, the type says what the issue is.
+- Set a type on an existing issue: `gh api -X PATCH repos/bytemux/btmx-focus/issues/<n> -f type=<Story|Task|Bug|Spike>`.
+
 ## Pull requests as a triage surface
 
 **PRs as a request surface: no.** _(Set to `yes` if this repo treats external PRs as feature requests; `/triage` reads this flag.)_

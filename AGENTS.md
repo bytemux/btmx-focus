@@ -39,9 +39,13 @@ being asked for each one. Stop only at the plan approval (step 2).
      `feat`/`fix` separate from `docs`/`chore`).
    Answers like "yes", "да", "go" approve it; changes to the plan mean a
    revised plan, not a start.
-3. **Branch from fresh main.** `git fetch origin`, then
-   `git switch -c claude/<topic> origin/main` (works in a worktree too).
-   A dirty working tree: `git stash push -u -m "<topic>-wip"` first
+3. **Branch from an issue and fresh main.** Every change has a `Task`,
+   `Bug` or `Spike` issue (create it with skill:issue; see "How to develop
+   in this repo" below). `git fetch origin`, then
+   `gh issue develop <n> --name <type>/<n>-<slug> --base main --checkout`;
+   in a worktree, `gh issue develop <n> --name <type>/<n>-<slug> --base main`
+   and `git worktree add <dir> <type>/<n>-<slug>`.
+   A dirty working tree: `git stash push -u -m "<slug>-wip"` first
    (don't ask). One branch per PR; never stack PRs.
 4. **Build and test.** Implement with unit tests; update `GLOSSARY.md`
    (and an ADR for a real decision) in the same change. Then
@@ -49,12 +53,12 @@ being asked for each one. Stop only at the plan approval (step 2).
    and look at every changed PNG, the README image included),
    `swiftformat . && swiftlint`, `scripts/build-app.sh`. All green
    before committing.
-5. **Commit, push, PR.** Conventional commit and PR title (Pull requests
-   below). If `git push` fails with "Permission denied (publickey)", push
+5. **Commit, push, PR.** Conventional commit; open the PR with skill:pr
+   (title and body, Pull requests below). If `git push` fails with "Permission denied (publickey)", push
    over HTTPS with the `gh` login:
    `git -c url."https://github.com/".insteadOf=git@github.com: push -u origin HEAD`.
-   PR body: what changes, what to check by hand, tests. Ends with the
-   attribution line.
+   PR body: `Closes #<n>`, what changes, what to check by hand, tests.
+   Ends with the attribution line.
 6. **Review with a subagent.** Start a subagent (Agent tool) that runs the
    `code-review` skill as `/code-review low --comment --fix <PR number>`:
    it posts its findings as PR comments and applies the fixes. Then check
@@ -71,12 +75,14 @@ Merging releases automatically (ADR 0017); the user merges.
 
 ## Pull requests
 
-The PR title becomes the merge commit's title, and the Release workflow,
-which runs on every merge to main, reads the version bump from it
-(`docs/building.md` → Releasing). Start it with a conventional type:
-`feat:` or `fix:` (minor), `type!:` (major), `perf:`, `refactor:` or
-`revert:` (patch), `docs:`, `chore:`, `ci:`, `test:`, `style:` or `build:`
-(no release). A title with no type fails the PR title check (ADR 0018).
+PRs merge as squash only: the PR title (+ `(#PR)`) becomes the commit on
+main, and the Release workflow, which runs on every merge to main, reads
+the SemVer bump from it (`docs/building.md` → Releasing, ADR 0019). Start
+it with a conventional type: `type!:` (major), `feat:` (minor), `fix:`,
+`perf:`, `refactor:` or `revert:` (patch), `docs:`, `chore:`, `ci:`,
+`test:`, `style:` or `build:` (no release). A change that ships nothing in
+the app takes a no-release type (`ci:`, not `fix(ci):`). A title with no
+type fails the `pr-title` check (ADR 0018).
 
 Don't stack PRs (base one PR on another's branch): if the base merges
 first, the stacked one merges into that branch and never reaches main.
@@ -111,3 +117,30 @@ Default vocabulary: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-
 ### Domain docs
 
 Single-context: `GLOSSARY.md` and `docs/adr/` at the repo root. See `docs/agents/domain.md`.
+
+<!-- Block added by skill:init-repo to the AGENTS.md of a target repo. Source of truth: btmx-sdlc/docs/conventions.md -->
+
+## How to develop in this repo
+
+Work is tracked in GitHub Issues. Every change goes through an issue and a PR.
+
+1. Pick an issue: `Task`, `Bug` or `Spike`. A `Story` has no code of its own; work on its Tasks.
+2. Create the branch from the issue: `gh issue develop <n> --name <type>/<n>-<slug> --base main --checkout`.
+3. Commit with Conventional Commits: `<type>[(scope)][!]: <description>`.
+4. Open the PR with skill:pr. Do not write the PR title or body by hand.
+5. The user merges the PR (squash only). Agents merge only when the user asks directly. The issue closes on merge. Close a Story by hand when all its Tasks are closed.
+
+Create issues with skill:issue: it sets the issue type and, for a Task, the parent Story.
+
+### Rules
+
+- Issue types: `Story`, `Task` (sub-issue of a Story), `Bug`, `Spike`. 1 Task, Bug or Spike = 1 branch = 1 PR.
+- Branch: `<type>/<n>-<slug>`. No commits on `main`.
+- `<type>`: `feat`, `fix`, `refactor`, `perf`, `test`, `docs`, `style`, `build`, `ci`, `chore`, `revert`.
+- Priority (issue field): set only when the user asks.
+- Releases (if `.github/workflows/release.yml` exists): every merge to `main` can release. The PR title type sets the SemVer bump: `type!:` major; `feat` minor; `fix`, `perf`, `refactor`, `revert` patch; `docs`, `chore`, `ci`, `test`, `style`, `build` no release. A change that ships nothing to users takes a no-release type (`ci:`, not `fix(ci):`). Nobody edits the version by hand.
+
+### Local checks
+
+pre-commit hooks check the commit message and the branch name, and block commits on `main`. They are installed by skill:init-repo.
+In a new clone run `pre-commit install`. Do not use `git commit --no-verify`.
