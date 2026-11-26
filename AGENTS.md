@@ -138,7 +138,7 @@ Create issues with skill:issue: it sets the issue type and, for a Task, the pare
 - Branch: `<type>/<n>-<slug>`. No commits on `main`.
 - `<type>`: `feat`, `fix`, `refactor`, `perf`, `test`, `docs`, `style`, `build`, `ci`, `chore`, `revert`.
 - Priority (issue field): set only when the user asks.
-- Releases: every merge to `main` can release. The PR title type sets the SemVer bump: `type!:` major; `feat` minor; `fix`, `perf`, `refactor`, `revert` patch; `docs`, `chore`, `ci`, `test`, `style`, `build` no release. A change that ships nothing to users takes a no-release type (`ci:`, not `fix(ci):`). Nobody edits the version by hand.
+- Releases: every merge to `main` can release. The PR title type sets the SemVer bump: `type!:` major; `feat` minor; `fix`, `perf`, `refactor`, `revert` patch; `docs`, `chore`, `ci`, `test`, `style`, `build` no release. A PR body line that starts with `BREAKING CHANGE:` also makes a major release: write it only for a breaking change. A change that ships nothing to users takes a no-release type (`ci:`, not `fix(ci):`). Nobody edits the version by hand.
 
 ### Local checks
 

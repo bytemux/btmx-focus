@@ -136,7 +136,7 @@ Every merge to main releases (ADR 0017), so main is always releasable:
    computes the SemVer version from the commits since the latest `v*` tag
    with `scripts/next-version.sh`, copied from btmx-sdlc (ADR 0019:
    `type!:` or `BREAKING CHANGE` → major, `feat` → minor,
-   `fix`/`perf`/`refactor`/`revert` → patch; no tag yet → 1.0.0).
+   `fix`/`perf`/`refactor`/`revert` → patch; no tag yet → 0.0.1).
    `scripts/next-version.sh` run locally prints the next version. `docs`, `chore`,
    `ci`, `test`, `style`, `build` and titles with no type don't count
    (ADR 0018): they stay out of the changelog, and with nothing else since

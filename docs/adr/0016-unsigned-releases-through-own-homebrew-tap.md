@@ -1,6 +1,6 @@
 # 0016. Unsigned releases through our own Homebrew tap
 
-Status: Accepted
+Status: Accepted, amended by 0018 and 0019
 Date: 2026-11-02
 
 ## Context
@@ -19,7 +19,7 @@ disables casks that fail Gatekeeper, and Homebrew 5 dropped
   the Release workflow (dispatched by hand; since ADR 0017, on every
   merge to main). The workflow computes the
   version from the commits since the latest tag (breaking → major,
-  feat/fix → minor, else patch; first release 1.0.0); the macOS runner
+  feat/fix → minor, else patch; first release 1.0.0; the rules now: ADR 0018, 0019); the macOS runner
   only starts when there is something to release.
 - Homebrew installs it from our own tap, `bytemux/homebrew-tap`
   (`brew install bytemux/tap/btmx-focus`); `scripts/release.sh` updates

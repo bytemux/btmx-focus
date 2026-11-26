@@ -1,12 +1,14 @@
 #!/usr/bin/env bash
 # Computes the next version from the commit titles on main since the latest
 # v<major>.<minor>.<patch> tag. Rules: btmx-sdlc docs/versioning.md.
-#   breaking (`type!:` or a BREAKING CHANGE footer) → major
+#   breaking (`type!:` or a BREAKING CHANGE footer, any of the 11 types) → major
 #   feat → minor
 #   fix, perf, refactor, revert → patch
 #   docs, chore, ci, test, style, build → no release
-#   no type → no release, warning
-# No tag yet → 1.0.0. Nothing releasable → empty version, exit 0.
+#   no type, or a type not in the list → no release, warning
+# No tag yet → 0.0.1. Nothing releasable → empty version, exit 0.
+# Only tags of the exact form v<major>.<minor>.<patch> count; others
+# (e.g. v1.2.3-rc.1) are ignored.
 #
 # Usage: next-version.sh [<rev>]   (default HEAD; run in the repo's clone,
 #   with full history and tags: actions/checkout with fetch-depth: 0)
@@ -17,12 +19,12 @@ set -euo pipefail
 
 rev="${1:-HEAD}"
 
-breaking='^[a-z]+(\([^)]*\))?!:'
-minor_types='^feat(\([^)]*\))?:'
-patch_types='^(fix|perf|refactor|revert)(\([^)]*\))?:'
-no_release='^(docs|chore|ci|test|style|build)(\([^)]*\))?:'
+# <type>[(scope)][!]: — group 1 is the type, group 3 the `!`.
+typed='^(feat|fix|perf|refactor|revert|docs|chore|ci|test|style|build)(\([^)]*\))?(!?):'
+release_tag='^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$'
 
-base="$(git tag --list 'v[0-9]*.[0-9]*.[0-9]*' --merged "$rev" --sort=-v:refname | head -n 1)"
+# `|| true`: grep finds no tag, or head closes the pipe early.
+base="$(git tag --list 'v*' --merged "$rev" --sort=-v:refname | grep -E "$release_tag" | head -n 1 || true)"
 range="$rev"
 [ -z "$base" ] || range="$base..$rev"
 shas="$(git rev-list --first-parent "$range")"
@@ -36,18 +38,22 @@ for sha in $shas; do
     if [[ "$title" == "Merge pull request"* ]]; then
         title="$(sed -n '2,$p' <<<"$msg" | grep -v '^[[:space:]]*$' | head -n 1 || true)"
     fi
-    if [[ "$title" =~ $breaking ]] || grep -Eq '^BREAKING[ -]CHANGE:' <<<"$msg"; then
-        level=major
-    elif [[ "$title" =~ $minor_types ]]; then
-        [ "$level" = major ] || level=minor
-    elif [[ "$title" =~ $patch_types ]]; then
-        [ -n "$level" ] || level=patch
-    elif [[ "$title" =~ $no_release ]]; then
-        continue
-    else
-        # No type, e.g. a file committed from GitHub's web page.
+    if ! [[ "$title" =~ $typed ]]; then
+        # No type, e.g. a file committed from GitHub's web page. A BREAKING
+        # CHANGE line in its body does not count either.
         echo "::warning::Not released, no conventional type: $title"
         continue
+    fi
+    type="${BASH_REMATCH[1]}"
+    bang="${BASH_REMATCH[3]}"
+    if [ -n "$bang" ] || grep -Eq '^BREAKING[ -]CHANGE:' <<<"$msg"; then
+        level=major
+    else
+        case "$type" in
+            feat) [ "$level" = major ] || level=minor ;;
+            fix | perf | refactor | revert) [ -n "$level" ] || level=patch ;;
+            *) continue ;; # docs, chore, ci, test, style, build
+        esac
     fi
     changelog+="- ${title}"$'\n'
 done
@@ -58,7 +64,7 @@ if [ -z "$changelog" ]; then
 fi
 
 if [ -z "$base" ]; then
-    version=1.0.0
+    version=0.0.1
     level=initial
 else
     IFS=. read -r major minor patch <<<"${base#v}"

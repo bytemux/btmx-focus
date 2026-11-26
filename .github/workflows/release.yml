@@ -6,7 +6,7 @@
 #   fix/perf/refactor/revert → patch. Other types (docs, chore, ci, test,
 #   style, build) and titles with no type don't count; with nothing else
 #   since the tag the run ends green without releasing.
-# No tag yet → 1.0.0. The macOS runner only starts once the plan job has a
+# No tag yet → 0.0.1. The macOS runner only starts once the plan job has a
 # version.
 name: Release
 

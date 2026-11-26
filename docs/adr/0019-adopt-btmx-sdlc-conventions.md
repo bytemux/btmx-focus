@@ -23,6 +23,9 @@ a repo. Its release CI and versioning rules come from this repo
 - The version script moves from `release.yml` to `scripts/next-version.sh`,
   a copy of btmx-sdlc's, which has its tests. Versions follow SemVer:
   `fix` is a **patch** now (was minor); the rest of ADR 0018 stays.
+  Also from the script: `!` and `BREAKING CHANGE:` count only on a typed
+  title; only exact `v<major>.<minor>.<patch>` tags count; with no tag the
+  first release is `0.0.1` (was `1.0.0`; this repo has tags already).
 - The PR title check is the btmx-sdlc `pr-title.yml`; the required check on
   main is `pr-title` (was `Conventional type`).
 
