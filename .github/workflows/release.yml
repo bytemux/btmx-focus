@@ -24,8 +24,9 @@ concurrency:
   group: release
   cancel-in-progress: false
 
+# Read-only by default; only the release job can write (btmx-sdlc docs/ci.md §3).
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   plan:
@@ -38,6 +39,7 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           fetch-depth: 0
+          persist-credentials: false # do not save the token in .git/config
       - id: next
         run: scripts/next-version.sh # from btmx-sdlc; rules: ADR 0019
 
@@ -46,8 +48,15 @@ jobs:
     # No version: nothing to release. dry_run is only set by hand.
     if: ${{ needs.plan.outputs.version != '' && !inputs.dry_run }}
     runs-on: macos-26
+    # Replaces the workflow-level block for this job: gh release create needs write.
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          # gh reads GH_TOKEN; release.sh's `git fetch` works without a
+          # token because the repo is public.
+          persist-credentials: false
       # bash 3.2 (macOS) exits 0 after a parse error when the script has an
       # EXIT trap, so the job would go green having done nothing; fail on
       # a parse error before anything runs.
