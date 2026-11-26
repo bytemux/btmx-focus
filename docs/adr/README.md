@@ -40,6 +40,7 @@ What becomes easier or harder as a result.
 | [0013](0013-no-network-sandboxed-no-ads.md) | No network, sandboxed, no ads or upsells | Accepted |
 | [0014](0014-focus-mode-detection-through-infocusstatuscenter.md) | Focus mode detection through `INFocusStatusCenter` | Accepted |
 | [0015](0015-sleep-behaviour-setting.md) | Sleep behaviour setting: reset, pause or keep counting | Accepted |
-| [0016](0016-unsigned-releases-through-own-homebrew-tap.md) | Unsigned releases through our own Homebrew tap | Accepted |
+| [0016](0016-unsigned-releases-through-own-homebrew-tap.md) | Unsigned releases through our own Homebrew tap | Accepted, amended by 0018 and 0019 |
 | [0017](0017-release-on-every-merge-to-main.md) | Release on every merge to main | Accepted |
-| [0018](0018-only-typed-commits-release.md) | Only typed commits release; PR titles are checked | Accepted |
+| [0018](0018-only-typed-commits-release.md) | Only typed commits release; PR titles are checked | Accepted, amended by 0019 |
+| [0019](0019-adopt-btmx-sdlc-conventions.md) | Adopt btmx-sdlc conventions; SemVer with `fix` → patch | Accepted |

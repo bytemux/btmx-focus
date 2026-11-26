@@ -1,10 +1,9 @@
-# PR title check (ADR 0018). The PR title becomes the merge commit's title,
-# and the Release workflow decides the version and changelog from it, so it
-# must start with a Conventional Commits type:
-#   type(optional scope)!: summary
-# Make this check required on main (Settings → Rules) so a PR can't merge
-# without it. Keep the types in sync with release.yml.
-name: PR title
+# PR title = Conventional Commits (btmx-sdlc docs/conventions.md §3).
+# With squash merge the PR title becomes the commit on main, and the Release
+# workflow reads the version bump from it (docs/versioning.md).
+# Blocks merge only when the ruleset on main requires the "pr-title" check.
+# Keep the types in sync with scripts/next-version.sh.
+name: pr-title
 
 on:
   pull_request:
@@ -13,8 +12,8 @@ on:
 permissions: {}
 
 jobs:
-  conventional-type:
-    name: Conventional type
+  pr-title:
+    name: pr-title
     runs-on: ubuntu-latest
     steps:
       - name: Check the title
@@ -23,12 +22,12 @@ jobs:
           TITLE: ${{ github.event.pull_request.title }}
         shell: bash
         run: |
-          pattern='^(feat|fix|perf|refactor|revert|docs|chore|ci|test|style|build)(\([a-z0-9-]+\))?!?: [^ ].*'
+          pattern='^(feat|fix|refactor|perf|test|docs|style|build|ci|chore|revert)(\([a-z0-9-]+\))?!?: [^ ].*'
           if [[ "$TITLE" =~ $pattern ]]; then
             echo "OK: $TITLE"
             exit 0
           fi
-          echo "::error::PR title needs a type, e.g. 'feat: …', 'fix(timer): …', 'chore!: …'. Got: $TITLE"
-          echo "Types: feat, fix (minor release); perf, refactor, revert (patch);"
+          echo "::error::PR title needs a type, e.g. 'feat: …', 'fix(ui): …', 'chore!: …'. Got: $TITLE"
+          echo "Types: feat (minor); fix, perf, refactor, revert (patch);"
           echo "docs, chore, ci, test, style, build (no release). '!' after the type: major."
           exit 1

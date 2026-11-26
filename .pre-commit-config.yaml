@@ -1,0 +1,23 @@
+# Local gates for docs/conventions.md. Install in each clone:
+#   pre-commit install
+default_install_hook_types: [pre-commit, commit-msg]
+
+repos:
+  - repo: local
+    hooks:
+      # first line of the commit message = Conventional Commits
+      - id: conventional-commit-msg
+        name: conventional commit message
+        language: pygrep
+        entry: '\A(feat|fix|refactor|perf|test|docs|style|build|ci|chore|revert)(\([a-z0-9-]+\))?!?: \S'
+        args: [--multiline, --negate]   # fail if the message does not start with the pattern
+        stages: [commit-msg]
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      # no commits on main or master (hook default); other branches must be <type>/<n>-<slug>
+      - id: no-commit-to-branch
+        args:
+          - --pattern
+          - '^(?!(feat|fix|refactor|perf|test|docs|style|build|ci|chore|revert)/[0-9]+-[a-z0-9-]+$).*'

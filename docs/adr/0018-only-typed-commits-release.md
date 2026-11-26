@@ -1,6 +1,6 @@
 # 0018. Only typed commits release; PR titles are checked
 
-Status: Accepted
+Status: Accepted, amended by 0019
 Date: 2026-11-25
 
 ## Context
@@ -13,8 +13,8 @@ changed.
 ## Decision
 
 - Only these types release: breaking (`type!:` or a `BREAKING CHANGE:`
-  footer) → major, `feat`/`fix` → minor, `perf`/`refactor`/`revert` →
-  patch.
+  footer) → major, `feat`/`fix` → minor (ADR 0019: `fix` is a patch
+  now), `perf`/`refactor`/`revert` → patch.
 - `docs`, `chore`, `ci`, `test`, `style`, `build` and titles with no type
   don't release and stay out of the changelog. An untyped title shows a
   warning on the run.
