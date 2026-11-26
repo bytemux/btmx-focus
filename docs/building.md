@@ -134,10 +134,12 @@ Every merge to main releases (ADR 0017), so main is always releasable:
 2. Merge the PR. The Release workflow runs on every push to main (Actions →
    Release → Run workflow runs it by hand). It
    computes the version from the commits since the latest `v*` tag
-   (`type!:` or `BREAKING CHANGE` → major, `feat`/`fix` → minor, anything
-   else → patch; no tag yet → 1.0.0). `docs:` and `chore:` commits don't
-   count: they stay out of the changelog, and with nothing else since the
-   tag the run ends green without a release. Then, on a macOS runner, it runs the tests,
+   (`type!:` or `BREAKING CHANGE` → major, `feat`/`fix` → minor,
+   `perf`/`refactor`/`revert` → patch; no tag yet → 1.0.0). `docs`, `chore`,
+   `ci`, `test`, `style`, `build` and titles with no type don't count
+   (ADR 0018): they stay out of the changelog, and with nothing else since
+   the tag the run ends green without a release. The PR title check
+   (`.github/workflows/pr-title.yml`) rejects a PR whose title has no type. Then, on a macOS runner, it runs the tests,
    builds `btmx-focus-<version>.dmg`, creates the release `v<version>` and
    pushes the new version and checksum to `Casks/btmx-focus.rb` in the tap.
    "Dry run" only prints the version and changelog. Nobody edits the

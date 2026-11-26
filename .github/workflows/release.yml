@@ -1,10 +1,12 @@
 # Release (ADR 0016, 0017): runs on every push to main (a merged PR), or by
 # hand from Actions → Release → Run workflow.
 # The version is computed from the commits on main since the latest v* tag:
-#   breaking (`type!:` or BREAKING CHANGE) → major, feat/fix → minor, rest → patch.
-# docs: and chore: commits don't count; with nothing else since the tag the
-# run ends green without releasing. No tag yet → 1.0.0. The macOS runner only
-# starts once the plan job has a version.
+#   breaking (`type!:` or BREAKING CHANGE) → major, feat/fix → minor,
+#   perf/refactor/revert → patch. Other types (docs, chore, ci, test, style,
+#   build) and titles with no type don't count (ADR 0018); with nothing else
+#   since the tag the run ends green without releasing.
+# No tag yet → 1.0.0. The macOS runner only starts once the plan job has a
+# version.
 name: Release
 
 on:
@@ -48,10 +50,12 @@ jobs:
             exit 0
           fi
 
-          breaking='^[a-zA-Z]+(\([^)]*\))?!:'
+          # Types: see .github/workflows/pr-title.yml, which checks PR titles.
+          breaking='^[a-z]+(\([^)]*\))?!:'
           feature='^(feat|fix)(\([^)]*\))?:'
+          patch_types='^(perf|refactor|revert)(\([^)]*\))?:'
           # Changes that ship nothing in the app.
-          no_release='^(docs|chore)(\([^)]*\))?:'
+          no_release='^(docs|chore|ci|test|style|build)(\([^)]*\))?:'
           level=patch
           changelog=""
           for sha in $shas; do
@@ -61,18 +65,24 @@ jobs:
             if [[ "$title" == "Merge pull request"* ]]; then
               title="$(sed -n '2,$p' <<<"$msg" | grep -v '^[[:space:]]*$' | head -n 1 || true)"
             fi
-            # No version bump, no changelog line.
-            [[ "$title" =~ $no_release ]] && continue
-            changelog+="- ${title}"$'\n'
-            if [[ "$title" =~ $breaking ]] || grep -q 'BREAKING CHANGE' <<<"$msg"; then
+            if [[ "$title" =~ $breaking ]] || grep -q '^BREAKING CHANGE' <<<"$msg"; then
               level=major
-            elif [[ "$title" =~ $feature ]] && [ "$level" != major ]; then
-              level=minor
+            elif [[ "$title" =~ $feature ]]; then
+              [ "$level" = major ] || level=minor
+            elif [[ "$title" =~ $patch_types ]]; then
+              :
+            elif [[ "$title" =~ $no_release ]]; then
+              continue
+            else
+              # No type, e.g. a file committed from GitHub's web page.
+              echo "::warning::Not released, no conventional type: $title"
+              continue
             fi
+            changelog+="- ${title}"$'\n'
           done
 
           if [ -z "$changelog" ]; then
-            echo "::notice::Only docs and chore changes since $base: nothing to release"
+            echo "::notice::No releasable changes since ${base:-the start}"
             exit 0
           fi
 

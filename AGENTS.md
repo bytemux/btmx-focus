@@ -74,8 +74,9 @@ Merging releases automatically (ADR 0017); the user merges.
 The PR title becomes the merge commit's title, and the Release workflow,
 which runs on every merge to main, reads the version bump from it
 (`docs/building.md` → Releasing). Start it with a conventional type:
-`feat:` or `fix:` (minor), `type!:` (major), `docs:` or `chore:` (no
-release), anything else such as `ci:`, `test:`, `refactor:` (patch).
+`feat:` or `fix:` (minor), `type!:` (major), `perf:`, `refactor:` or
+`revert:` (patch), `docs:`, `chore:`, `ci:`, `test:`, `style:` or `build:`
+(no release). A title with no type fails the PR title check (ADR 0018).
 
 Don't stack PRs (base one PR on another's branch): if the base merges
 first, the stacked one merges into that branch and never reaches main.
